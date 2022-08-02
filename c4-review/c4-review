@@ -119,7 +119,6 @@ def payout(ns):
       ws[w]["payout"] = ppUSD(ws[w]["payout"])
       ws[w]["findings"].sort(key=lambda r: r["id"])
 
-
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
   wardenSummaries.sort(key=lambda r: -r["fraction"])
 
@@ -129,15 +128,13 @@ def payout(ns):
 def findings(ns):
   h = getIssueSummary(ns)
   for id in h:
-    if h[id]["payoutPerDup"]:
+    if "payoutPerDup" in h[id]:
       h[id]["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
   rs = [h[k] for k in h]
   rs.sort(key=lambda r: r["id"])
   return { "results": rs }
 
-
 ns = parser.parse_args(sys.argv[1:])
-
 
 if ns.command == "payouts":
   result=payout(ns)
@@ -146,7 +143,6 @@ elif ns.command == "findings":
 
 result["note"] = ("This tool only calculates shares for Highs and Mediums and will overestimate " +
                     "a little. It does not take into account QA reports.")
-
 
 ## Prints the records as valid JSON
 print(json.dumps(result, indent=2))
