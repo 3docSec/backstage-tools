@@ -93,13 +93,19 @@ def run(ns):
   for id in h:
     for w in h[id]["handles"]:
       if not w in ws:
-        ws[w] = { "handle": w, "ids": [], "fraction": 0.0, "payout": 0.0 }
-      ws[w]["ids"].append({ "id": id, "dups": h[id]["dups"], "payoutPerDup": ppUSD(h[id]["payoutPerDup"])})
+        ws[w] = { "handle": w, "ids": [], "fraction": 0.0 }
+        if ns.pot_size != None:
+          ws[w]["payout"] = 0.0
+      rec = { "id": id, "dups": h[id]["dups"] }
+      if ns.pot_size != None:
+        rec["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
+      ws[w]["ids"].append(rec)
       ws[w]["fraction"] += h[id]["fractionPerDup"]
       if ns.pot_size != None:
         ws[w]["payout"] += h[id]["payoutPerDup"]
-  for w in ws:
-    ws[w]["payout"] = ppUSD(ws[w]["payout"])
+  if ns.pot_size != None:
+    for w in ws:
+      ws[w]["payout"] = ppUSD(ws[w]["payout"])
 
 
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
