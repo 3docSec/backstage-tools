@@ -97,6 +97,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "zishansami",
         "zzzitron"
       ],
+      "githubIssueId": "269",
       "sharesForIssue": 5.3144100000000005,
       "sharesPerDup": 0.7592014285714287,
       "fractionPerDup": 0.013929488074281104,
@@ -113,6 +114,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "Lambda",
         "minhquanym"
       ],
+      "githubIssueId": "44",
       "sharesForIssue": 6.561,
       "sharesPerDup": 1.3122,
       "fractionPerDup": 0.02407565839999203,
@@ -130,6 +132,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "PwnedNoMore",
         "zzzitron"
       ],
+      "githubIssueId": "369",
       "sharesForIssue": 5.9049000000000005,
       "sharesPerDup": 0.9841500000000001,
       "fractionPerDup": 0.018056743799994023,
@@ -143,6 +146,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "hansfriese",
         "hyh"
       ],
+      "githubIssueId": "418",
       "sharesForIssue": 9.0,
       "sharesPerDup": 4.5,
       "fractionPerDup": 0.08256398628255154,
@@ -170,6 +174,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "unforgiven",
         "xiaoming90"
       ],
+      "githubIssueId": "50",
       "sharesForIssue": 0.6176733962839472,
       "sharesPerDup": 0.0386045872677467,
       "fractionPerDup": 0.0007082996919150672,
@@ -186,6 +191,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "shung",
         "xiaoming90"
       ],
+      "githubIssueId": "227",
       "sharesForIssue": 1.9683000000000002,
       "sharesPerDup": 0.39366,
       "fractionPerDup": 0.0072226975199976085,
@@ -201,6 +207,7 @@ $ ./c4-review findings test-data/putty.csv 42500
         "IllIllI",
         "zzzitron"
       ],
+      "githubIssueId": "223",
       "sharesForIssue": 2.1870000000000003,
       "sharesPerDup": 0.5467500000000001,
       "fractionPerDup": 0.010031524333330013,
@@ -218,20 +225,13 @@ $ ./c4-review findings test-data/putty.csv 42500
         "Metatron",
         "swit"
       ],
+      "githubIssueId": "285",
       "sharesForIssue": 1.7714700000000003,
       "sharesPerDup": 0.29524500000000004,
       "fractionPerDup": 0.005417023139998207,
       "payoutPerDup": "$230.22"
     },
     {
-      "id": "M-05",
-      "dups": 31,
-      "leadFinding": "IllIllI",
-      "handles": [
-        "0x29A",
-        "0xc0ffEE",
-        "0xDjango",
-        "AmitN",
 "... continued ..."
 ```
 
