@@ -78,6 +78,7 @@ def getIssueSummary(ns):
         h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [] }
       if r["duplicateOf"] == "":
         h[id]["leadFinding"] = r["handle"]
+        h[id]["githubIssueId"] = r["issueId"]
       h[id]["dups"] += 1
       h[id]["handles"].append(r["handle"])
   ## Calculate shares
