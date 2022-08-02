@@ -37,7 +37,15 @@ fi
 
 echo "## Usage"
 echo
+echo "### Commands"
+echo
 fmtCmd "./c4-review --help"
+echo "### `findings` command"
+echo
+fmtCmd "./c4-review findings --help"
+echo "### `payouts` command"
+echo
+fmtCmd "./c4-review payouts --help"
 echo
 echo "## Findings summary"
 echo
