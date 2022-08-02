@@ -140,6 +140,8 @@ if ns.command == "payouts":
   result=payout(ns)
 elif ns.command == "findings":
   result=findings(ns)
+else:
+  parser.parse_args(["--help"])
 
 result["note"] = ("This tool only calculates shares for Highs and Mediums and will overestimate " +
                     "a little. It does not take into account QA reports.")
