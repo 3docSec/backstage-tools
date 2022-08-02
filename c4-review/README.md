@@ -37,7 +37,6 @@ positional arguments:
 options:
   -h, --help          show this help message and exit
 ```
-./gen-docs.sh: line 43: findings: command not found
 ### `findings` command
 
 ```
@@ -56,7 +55,6 @@ positional arguments:
 options:
   -h, --help  show this help message and exit
 ```
-./gen-docs.sh: line 46: payouts: command not found
 ### `payouts` command
 
 ```
@@ -594,8 +592,3 @@ $ ./c4-review payouts test-data/putty.csv 42500 -w sseefried
   "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
 }
 ```
-
-
-
-
-
