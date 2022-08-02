@@ -49,7 +49,7 @@ fmtCmd "./c4-review payouts --help"
 echo
 echo "## Findings summary"
 echo
-fmtCmd "./c4-review findings test-data/putty.csv 42500"
+fmtCmd "./c4-review findings test-data/putty.csv 42500" yes
 echo
 echo "## Fractions for each handle"
 echo

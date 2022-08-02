@@ -81,7 +81,7 @@ options:
 $ ./c4-review findings test-data/putty.csv 42500
 ```
 
-```
+```json
 {
   "results": [
     {
