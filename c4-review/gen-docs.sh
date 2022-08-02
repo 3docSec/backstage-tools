@@ -40,10 +40,10 @@ echo
 echo "### Commands"
 echo
 fmtCmd "./c4-review --help"
-echo "### `findings` command"
+echo "### \`findings\` command"
 echo
 fmtCmd "./c4-review findings --help"
-echo "### `payouts` command"
+echo "### \`payouts\` command"
 echo
 fmtCmd "./c4-review payouts --help"
 echo

@@ -38,7 +38,7 @@ options:
   -h, --help          show this help message and exit
 ```
 ./gen-docs.sh: line 43: findings: command not found
-###  command
+### `findings` command
 
 ```
 $ ./c4-review findings --help
@@ -57,7 +57,7 @@ options:
   -h, --help  show this help message and exit
 ```
 ./gen-docs.sh: line 46: payouts: command not found
-###  command
+### `payouts` command
 
 ```
 $ ./c4-review payouts --help
