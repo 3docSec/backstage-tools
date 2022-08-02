@@ -1,0 +1,464 @@
+Q-01,Q-01,,Q,__141345__, Refund and withdraw could be automatic after exercised or expiry,243,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-01,Q-01,,Q,__141345__,"No portfolio calculation, low fund efficiency for the current collateral/exercise pattern",248,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-01,,60,Q,__141345__,QA Report,271,View on GitHub,Q,TRUE,FALSE,FALSE
+G-01,,45,G,__141345__,Gas Optimizations,272,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,__141345__,Orders could be unable to be fulfilled due to insufficient fund/underlying when when filled,242,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,__141345__,Missing floor token transfer for short call,244,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,__141345__,No approve before transfer,245,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,__141345__, Any one can mint penny NFT to take some advantage,246,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,__141345__," Low liquidity, no way to resell the opened position",247,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,__141345__,onERC721Received() could delegatecall to transder the tokens,278,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-02,,5,Q,_Adam,QA Report,230,View on GitHub,Q,TRUE,FALSE,FALSE
+G-02,,55,G,_Adam,Gas Optimizations,194,View on GitHub,G,TRUE,FALSE,FALSE
+G-03,,25,G,0v3rf10w,Gas Optimizations,337,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0v3rf10w,QA Report,336,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-03,Q-03,,Q,0x1f8b,Cancelled order can be exercised,57,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-03,,80,Q,0x1f8b,QA Report,58,View on GitHub,Q,TRUE,FALSE,FALSE
+G-04,,88,G,0x1f8b,Gas Optimizations,43,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0x1f8b,Upgraded Q -> M from 58 [1657813582004],439,View on GitHub,INVALID,FALSE,TRUE,TRUE
+M-05,M-05,,2,0x29A,Don't check if `value` is 0 for some paths,258,View on GitHub,M,FALSE,TRUE,FALSE
+Q-04,Q-04,,Q,0x29A,Functions have payable modifier but dont do anything with the ether,259,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-04,,27,Q,0x29A,QA Report,261,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0x29A,Gas Optimizations,260,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,0x29A,Gas Optimizations,401,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-01,H-01,,3,0x52,Fees are taken on unexercised put options and not taken on exercised put options,139,View on GitHub,H,FALSE,TRUE,FALSE
+Q-05,,8,Q,0x52,Long whitelist could cause out of gas error,137,View on GitHub,Q,TRUE,FALSE,FALSE
+M-01,M-01,,2,0xA5DF,Shorter can prevent the longer from exercising the option by adding a malicious asset to the order,90,View on GitHub,M,FALSE,TRUE,FALSE
+G-05,,95,G,0xA5DF,Gas Optimizations,217,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0xA5DF,QA Report,222,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-05,M-05,,2,0xc0ffEE,Upgraded Q -> M from 333 [1657814353016],440,View on GitHub,M,FALSE,TRUE,FALSE
+M-09,,,2,0xc0ffEE,The contract serves as a flashloan pool without fee,377,View on GitHub,M,TRUE,FALSE,FALSE
+M-10,M-10,,2,0xc0ffEE,Upgraded Q -> M from 333 [1657814362689],441,View on GitHub,M,FALSE,TRUE,FALSE
+G-06,,35,G,0xc0ffEE,Gas Optimizations,351,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0xc0ffEE,QA Report,333,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-05,M-05,,2,0xDjango,Potential fund loss for direct ETH transfers with non-WETH baseAsset,28,View on GitHub,M,FALSE,TRUE,FALSE
+Q-06,Q-06,,Q,0xDjango,Contract can make taker spend unbounded gas if baseAsset is ERC777,29,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-06,Q-06,,Q,0xDjango,fillOrder() can be DoSed with lack of token approvals,30,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-06,,70,Q,0xDjango,QA Report,31,View on GitHub,Q,TRUE,FALSE,FALSE
+G-07,,5,G,0xDjango,Gas Optimizations,32,View on GitHub,G,TRUE,FALSE,FALSE
+Q-07,,55,Q,0xf15ers,QA Report,317,View on GitHub,Q,TRUE,FALSE,FALSE
+G-08,,80,G,0xf15ers,Gas Optimizations,315,View on GitHub,G,TRUE,FALSE,FALSE
+G-09,,5,G,0xHarry,Gas Optimizations,167,View on GitHub,G,TRUE,FALSE,FALSE
+G-10,,75,G,0xkatana,Gas Optimizations,204,View on GitHub,G,TRUE,FALSE,FALSE
+G-11,,55,G,0xKitsune,Gas Optimizations,59,View on GitHub,G,TRUE,FALSE,FALSE
+Q-08,Q-08,,Q,0xNazgul,Potential Reentrancy in Several Functions,96,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-08,,60,Q,0xNazgul,QA Report,94,View on GitHub,Q,TRUE,FALSE,FALSE
+G-12,,65,G,0xNazgul,Gas Optimizations,93,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0xNazgul,Use `safeTransfer()/safeTransferFrom()` Consistently Instead of `transfer()/transferFrom()`,95,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-02,M-02,,2,0xNineDec,UNCAPPED AMOUNT OF DIFFERENT `Order.ERC20Asset` MAY PREVENT ORDERS FROM BEING EXECUTED AND WITHDRAWN,33,View on GitHub,M,FALSE,TRUE,FALSE
+M-03,M-03,,2,0xNineDec,UNCHECKED MALICIOUS FORMATS OF `Order.ERC20Asset` CAN DENY BENIGN FULFILLERS FROM TAKING PROFITS,34,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,0xNineDec,SETFEE() SHOULD BE TIMELOCKED,17,View on GitHub,M,FALSE,TRUE,FALSE
+Q-09,Q-09,,Q,0xNineDec,`batchFillOrder` HAS A HIGH LIKELIHOOD TO REVERT BECAUSE OF SEVERAL MANIPULABLE FACTORS,109,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-09,,20,Q,0xNineDec,QA Report,91,View on GitHub,Q,TRUE,FALSE,FALSE
+G-13,,25,G,0xNineDec,Gas Optimizations,92,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,0xNineDec,`ISWHITELISTED` CAN BE USED TO GRIEF OTHERS GAS,35,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,0xNineDec,FAILED ORDER FULFILLMENTS ARE OPEN TO REPLAY ATTACKS,108,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-01,H-01,,3,0xsanson,`fee` proportional to strike even for unexercised orders,404,View on GitHub,H,FALSE,TRUE,FALSE
+M-04,M-04,,2,0xsanson,Upgraded Q -> M from 417 [1657509638642],437,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,0xsanson,Upgraded Q -> M from 417 [1657853118593],443,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,0xsanson,Upgraded Q -> M from 417 [1657853103938],442,View on GitHub,M,FALSE,TRUE,FALSE
+Q-10,,45,Q,0xsanson,QA Report,417,View on GitHub,Q,TRUE,FALSE,FALSE
+G-14,,65,G,0xsanson,Gas Optimizations,424,View on GitHub,G,TRUE,FALSE,FALSE
+Q-11,,10,Q,0xSolus,QA Report,184,View on GitHub,Q,TRUE,FALSE,FALSE
+M-13,M-13,,2,ACai,QA Report,143,View on GitHub,M,FALSE,TRUE,FALSE
+G-15,,15,G,ACai,Gas Optimizations,142,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,ACai,The `fillOrder` function has potential reentrancy vulnerability. ,141,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-16,,25,G,ajtra,Gas Optimizations,420,View on GitHub,G,TRUE,FALSE,FALSE
+G-17,,25,G,ak1,Gas Optimizations,366,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,ak1,Condition check to verify the floorAssetTokenIds and order.floorTokens length can be improved for robustness.,382,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,ak1,PuttyV2.sol is allowing the cancelled orders to exercise and withdraw,421,View on GitHub,INVALID,FALSE,TRUE,TRUE
+INVALID,,,INVALID,ak1,Placing ERC 721 contract validation could increase the robustness of the contract,433,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,127,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,128,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,129,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,130,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,131,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,132,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,133,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Amithuddar,Gas Optimizations,135,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-05,M-05,,2,AmitN,validate that msg.value is 0 when it should be,171,View on GitHub,M,FALSE,TRUE,FALSE
+Q-12,Q-12,,Q,AmitN,redundant payable,174,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-12,,38,Q,AmitN,filled orders can be cancelled,73,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,AmitN,counter offer can't be called with floorAssetTokenIds ,172,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,AmitN,inconsistent fees,175,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,AmitN,floor asset can be included twice,176,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-11,M-11,,2,antonttc,Contract Owner can change the fee and cause an absolute loss for option seller,426,View on GitHub,M,FALSE,TRUE,FALSE
+Q-13,,30,Q,antonttc,QA Report,425,View on GitHub,Q,TRUE,FALSE,FALSE
+G-18,,5,G,apostle0x01,Gas Optimizations,86,View on GitHub,G,TRUE,FALSE,FALSE
+G-19,,5,G,asutorufos,Gas Optimizations,312,View on GitHub,G,TRUE,FALSE,FALSE
+Q-14,,30,Q,async,QA Report,264,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,async,Zero fee orders are possible,257,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-01,H-01,,3,auditor0517,Inconsistent charging admin fee for PuttyV2.exercise() and PuttyV2.withdraw().,207,View on GitHub,H,FALSE,TRUE,FALSE
+M-05,M-05,,2,auditor0517,Possible lost msg.value,205,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,auditor0517,A user might fail to withdraw his funds and asset.,206,View on GitHub,M,FALSE,TRUE,FALSE
+G-20,,45,G,Aymen0909,Gas Optimizations,241,View on GitHub,G,TRUE,FALSE,FALSE
+Q-15,,5,Q,aysha,QA Report,399,View on GitHub,Q,TRUE,FALSE,FALSE
+H-01,H-01,,3,berndartmueller,Short position owner will loose funds when put option expired,290,View on GitHub,H,FALSE,TRUE,FALSE
+M-04,,,2,berndartmueller,Put options are free of any fees,285,View on GitHub,M,TRUE,FALSE,FALSE
+M-05,M-05,,2,berndartmueller,Ether can be locked in `fillOrder` and `exercise` functions without a way to retrieve it,286,View on GitHub,M,FALSE,TRUE,FALSE
+M-06,M-06,,2,berndartmueller,Owner can DoS withdrawals,282,View on GitHub,M,FALSE,TRUE,FALSE
+M-06,M-06,,2,berndartmueller,DoS when withdrawing and locked user funds if contract ownership is renounced,291,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,berndartmueller,"Maker/taker can be a contract with no `onERC721Received` method, freezing assets",284,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,berndartmueller,Protocol fee rate can be arbitrarily modified by the admin/DAO and will apply to all existing options,287,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,,,2,berndartmueller,Options with a small strike price will round down to 0 and can prevent assets to be withdrawn,283,View on GitHub,M,TRUE,FALSE,FALSE
+Q-16,,27,Q,Bnke0x0,QA Report,169,View on GitHub,Q,TRUE,FALSE,FALSE
+G-21,,80,G,Bnke0x0,Gas Optimizations,100,View on GitHub,G,TRUE,FALSE,FALSE
+M-05,M-05,,2,BowTiedWardens,msg.value not handled in some paths of `fillOrder`,341,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,BowTiedWardens,msg.value not handled in some paths of `exercise`,342,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,BowTiedWardens,Upgraded Q -> M from 390 [1657876451641],444,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,BowTiedWardens,Upgraded Q -> M from 390 [1657876456166],445,View on GitHub,M,FALSE,TRUE,FALSE
+Q-17,,85,Q,BowTiedWardens,QA Report,390,View on GitHub,Q,TRUE,FALSE,FALSE
+G-22,,35,G,BowTiedWardens,Gas Optimizations,403,View on GitHub,G,TRUE,FALSE,FALSE
+G-23,,35,G,c3phas,Gas Optimizations,423,View on GitHub,G,TRUE,FALSE,FALSE
+M-11,M-11,,2,catchup,OnlyOwner functions that make critical changes should have safeguards,82,View on GitHub,M,FALSE,TRUE,FALSE
+Q-18,Q-18,,Q,catchup,batchFillOrder() function is susceptible to DoS,83,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-18,,40,Q,catchup,cancel() function does not check if the order has already been filled,81,View on GitHub,Q,TRUE,FALSE,FALSE
+G-24,,25,G,catchup,Gas Optimizations,84,View on GitHub,G,TRUE,FALSE,FALSE
+M-01,M-01,,2,cccz,Users can use any tokens as order.erc20Assets,37,View on GitHub,M,FALSE,TRUE,FALSE
+M-01,M-01,,2,cccz,Users can use any tokens as order.erc20Assets,40,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,cccz,msg.value == 0 not checked ,22,View on GitHub,M,FALSE,TRUE,FALSE
+M-07,,,2,cccz,"An attacker can create a short put option order on an NFT that does not support ERC721(like cryptopunk), and the user can fulfill the order, but cannot exercise the option",16,View on GitHub,M,TRUE,FALSE,FALSE
+M-13,M-13,,2,cccz,order.duration should be checked for values greater than a minimum,36,View on GitHub,M,FALSE,TRUE,FALSE
+Q-19,,10,Q,cccz,QA Report,38,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,cccz,Users can use fee-on-transfer and rebase tokens as baseAsset,21,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,cccz,"When the supply of NFTs in the order is small, users may not be able to exercise options",39,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Chandr,Gas Optimizations,53,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Chandr,Gas Optimizations,54,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Chandr,Gas Optimizations,55,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Chandr,Gas Optimizations,56,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-01,M-01,,2,chatch,Maker could avoid premium on longs and strike payment on short puts by creating an order with a fake baseAsset token,406,View on GitHub,M,FALSE,TRUE,FALSE
+Q-20,Q-20,,Q,Chom,"Filled, Exercised orders can be cancelled",308,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-20,Q-20,,Q,Chom,Exact order expiration can't be set,311,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-20,,68,Q,Chom,QA Report,304,View on GitHub,Q,TRUE,FALSE,FALSE
+G-25,,15,G,Chom,Gas Optimizations,314,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Chom,Fee-on-transfer tokens are not working,164,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Chom,Royalty can't be collected. You may face serious lawsuit from blue chip NFTs once you have been famous.,165,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,cloudjunky,"Unchecked return value for WETH transfers, use safeTranfer",136,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,cloudjunky,Orders from test networks can be replayed on mainnet,140,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-26,,5,G,codetilda,Gas Optimizations,218,View on GitHub,G,TRUE,FALSE,FALSE
+M-13,,,2,codexploder,Order duration can be set to 0 by Malicious maker,107,View on GitHub,M,TRUE,FALSE,FALSE
+G-27,,15,G,cRat1st0s,Gas Optimizations,146,View on GitHub,G,TRUE,FALSE,FALSE
+M-13,M-13,,2,Critical,Unconventional design of option expiration time design and lack of validation making it possible for the taker to buy a long position that can not be exercised,325,View on GitHub,M,FALSE,TRUE,FALSE
+Q-21,,42,Q,cryptphi,QA Report,374,View on GitHub,Q,TRUE,FALSE,FALSE
+G-28,,10,G,cryptphi,Gas Optimizations,409,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,cryptphi,return value of weth transfer is ignored and unchecked,321,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,cryptphi,both order side positions don’t exist  is not checked,345,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,cryptphi,Same order could be exercised multiple times if transferFrom fails,367,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,cryptphi,Exercised call options floor asset token ids not saved to short position,389,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-01,H-01,,3,csanuragjain,PUT short option is always in loss,380,View on GitHub,H,FALSE,TRUE,FALSE
+H-02,H-02,,3,csanuragjain,Counter offer is not implemented correctly,363,View on GitHub,H,FALSE,TRUE,FALSE
+M-01,M-01,,2,csanuragjain,Airdrop malicious NFT/token,400,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,csanuragjain,Use safeMint instead of mint,106,View on GitHub,M,FALSE,TRUE,FALSE
+M-15,M-15,,2,csanuragjain,Zero premium allows to steal from users,104,View on GitHub,M,FALSE,TRUE,FALSE
+Q-22,,25,Q,csanuragjain,QA Report,407,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,csanuragjain,Fee transfer token not considered,105,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-03,H-03,,3,danb,some options cannot be exercized,60,View on GitHub,H,FALSE,TRUE,FALSE
+M-05,M-05,,2,danb,no protection from sending eth accidently,61,View on GitHub,M,FALSE,TRUE,FALSE
+Q-23,Q-23,,Q,danb,Some scenarios don't require paying fees,64,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-23,Q-23,,Q,danb,setBaseURI and setFee are payable for no reason,66,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-23,,45,Q,danb,orders can be cancelled at any time,62,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,danb,The option buyer never pays fees.,65,View on GitHub,INVALID,FALSE,TRUE,TRUE
+INVALID,,,INVALID,danb,floor tokens contracts can have duplicates,67,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,danb,acceptCounterOffer doesn't work for order with floor tokens.,68,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-24,,20,Q,datapunk,QA Report,402,View on GitHub,Q,TRUE,FALSE,FALSE
+G-29,,10,G,datapunk,Gas Optimizations,419,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,datapunk,missing check of the non-existence of both order sides positions in fillOrder,387,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,datapunk,not checking TokenIds of new order against originalOrder in acceptCounter,416,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-25,,5,Q,David_,QA Report,5,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,David_,Gas Optimizations,4,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,David_,Gas Optimizations,8,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-10,M-10,,2,defsec,Upgraded Q -> M from 340 [1657877639047],446,View on GitHub,M,FALSE,TRUE,FALSE
+Q-26,,55,Q,defsec,QA Report,340,View on GitHub,Q,TRUE,FALSE,FALSE
+G-30,,85,G,defsec,Gas Optimizations,381,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,defsec,Gas Optimizations,319,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,defsec,msg.value inside a loop can cause to disruption on the orders,357,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,defsec,Missing check If the order is already exercised,362,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-27,,12,Q,delfin454000,QA Report,178,View on GitHub,Q,TRUE,FALSE,FALSE
+G-31,,25,G,delfin454000,Gas Optimizations,177,View on GitHub,G,TRUE,FALSE,FALSE
+M-05,M-05,,2,dipp,User may lose funds if ```msg.value > 0``` and ```baseAsset != weth```,273,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,dirk_y,Users can accidentally lose ETH when calling `fillOrder` with value,63,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,dirk_y,Protocol fee can be changed after filling an order,76,View on GitHub,M,FALSE,TRUE,FALSE
+Q-28,Q-28,,Q,dirk_y,Rewards for holding ERC721 tokens can't be withdrawn by admin,79,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-28,,42,Q,dirk_y,QA Report,102,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,dirk_y,A short put maker could prevent the user who fills the order from ever exercising the option,69,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,dirk_y,Users calling `acceptCounterOffer` lose funds via protocol fee and in gas costs,80,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-29,,23,Q,doddle0x,QA Report,188,View on GitHub,Q,TRUE,FALSE,FALSE
+Q-30,,10,Q,durianSausage,QA Report,24,View on GitHub,Q,TRUE,FALSE,FALSE
+G-32,,30,G,durianSausage,Gas Optimizations,23,View on GitHub,G,TRUE,FALSE,FALSE
+Q-31,,25,Q,ElKu,QA Report,240,View on GitHub,Q,TRUE,FALSE,FALSE
+G-33,,75,G,ElKu,Gas Optimizations,239,View on GitHub,G,TRUE,FALSE,FALSE
+M-03,M-03,,2,exd0tpy,Zero amount in order.erc20Assets lead to DOS,148,View on GitHub,M,FALSE,TRUE,FALSE
+Q-32,,5,Q,exd0tpy,QA Report,160,View on GitHub,Q,TRUE,FALSE,FALSE
+G-34,,5,G,exd0tpy,Gas Optimizations,159,View on GitHub,G,TRUE,FALSE,FALSE
+Q-33,,15,Q,fatherOfBlocks,QA Report,71,View on GitHub,Q,TRUE,FALSE,FALSE
+G-35,,30,G,fatherOfBlocks,Gas Optimizations,70,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,fatherOfBlocks,lack of validating transfer of WETH,72,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-36,,25,G,Fitraldys,Gas Optimizations,343,View on GitHub,G,TRUE,FALSE,FALSE
+Q-34,,45,Q,Funen,QA Report,412,View on GitHub,Q,TRUE,FALSE,FALSE
+G-37,,25,G,Funen,Gas Optimizations,411,View on GitHub,G,TRUE,FALSE,FALSE
+M-01,M-01,,2,GalloDaSballo,Upgraded Q -> M from 277 [1657879288067],449,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,GalloDaSballo,Upgraded Q -> M from 277 [1657879283610],448,View on GitHub,M,FALSE,TRUE,FALSE
+Q-35,,78,Q,GalloDaSballo,QA Report,277,View on GitHub,Q,TRUE,FALSE,FALSE
+G-38,,100,G,GalloDaSballo,Gas Optimizations,280,View on GitHub,G,TRUE,FALSE,FALSE
+Q-36,,30,Q,GimelSec,QA Report,255,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,GimelSec,Doesn’t check order.baseAsset.code when exercising call order,250,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,GimelSec,SignatureChecker.isValidSignatureNow allows option signers to dynamically/temporarily revoke options,251,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,GimelSec,It should handle fee-on-transfer tokens due to upgradable tokens,254,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,GimelSec,Gas Optimizations,256,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-37,,20,Q,gogo,QA Report,307,View on GitHub,Q,TRUE,FALSE,FALSE
+G-39,,65,G,gogo,Gas Optimizations,379,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,gogo,Potential loss of order premium,275,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-40,,65,G,grrwahrr,Gas Optimizations,213,View on GitHub,G,TRUE,FALSE,FALSE
+Q-38,,30,Q,hake,QA Report,125,View on GitHub,Q,TRUE,FALSE,FALSE
+G-41,,5,G,hake,Gas Optimizations,126,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,hake,`batchFillOrder.fillOrder()` `WETH.deposit()` wont work if  user uses native ETH instead of WETH to pay for more than one order,123,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,hake,`batchFillOrder.fillOrder()` `msg.value` checks will revert if  user uses native ETH instead of WETH to pay for more than one order,124,View on GitHub,INVALID,FALSE,FALSE,TRUE
+reportId,duplicateOf,score,risk,handle,title,issueId,issueUrl,gh_Risk,gh_isOpen,gh_isDuplicate,gh_isInvalid
+H-02,H-02,,3,hansfriese,A user might have 2 filled orders unexpectedly by canceling an already filled order.,115,View on GitHub,H,FALSE,TRUE,FALSE
+H-04,H-04,,3,hansfriese,An order maker might steal premium from the sender by setting order.strike = 0.,216,View on GitHub,H,FALSE,TRUE,FALSE
+M-01,M-01,,2,hansfriese,An order maker might steal premium from the sender by revoking exercise() using a vulnerable asset.,113,View on GitHub,M,FALSE,TRUE,FALSE
+M-01,M-01,,2,hansfriese,An attacker(order maker) might make the sender can't withdraw tokens using vulnerable tokens.,117,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,hansfriese,Ensure zero msg.value if transferring from user and baseAsset is not WETH.,114,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,hansfriese,PuttyV2.withdraw() might revert with zero transfer.,116,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,hansfriese,Upgraded Q -> M from 118 [1657878801501],447,View on GitHub,M,FALSE,TRUE,FALSE
+Q-39,,15,Q,hansfriese,QA Report,118,View on GitHub,Q,TRUE,FALSE,FALSE
+G-42,,35,G,hansfriese,Gas Optimizations,119,View on GitHub,G,TRUE,FALSE,FALSE
+G-43,,5,G,Haruxe,Gas Optimizations,103,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Haruxe,batchFillOrder() wETH vulnerability,138,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-40,,10,Q,Hawkeye,QA Report,181,View on GitHub,Q,TRUE,FALSE,FALSE
+G-44,,10,G,Hawkeye,Gas Optimizations,179,View on GitHub,G,TRUE,FALSE,FALSE
+M-05,M-05,,2,horsefacts,Native ETH can be sent with ERC20 orders,324,View on GitHub,M,FALSE,TRUE,FALSE
+M-09,M-09,,2,horsefacts,Underlying assets may be modified during execution,328,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,,,2,horsefacts,Putty position tokens may be minted to non ERC721 receivers,327,View on GitHub,M,TRUE,FALSE,FALSE
+M-11,M-11,,2,horsefacts,Upgraded Q -> M from 330 [1657894706461],450,View on GitHub,M,FALSE,TRUE,FALSE
+M-13,M-13,,2,horsefacts,Upgraded Q -> M from 330 [1657894711383],451,View on GitHub,M,FALSE,TRUE,FALSE
+M-16,M-16,,2,horsefacts,Upgraded Q -> M from 330 [1657894715614],452,View on GitHub,M,FALSE,TRUE,FALSE
+Q-41,,40,Q,horsefacts,QA Report,330,View on GitHub,Q,TRUE,FALSE,FALSE
+G-45,,25,G,horsefacts,Gas Optimizations,331,View on GitHub,G,TRUE,FALSE,FALSE
+M-04,M-04,,2,hubble,Fees not sent to admin/DAO in some condition,436,View on GitHub,M,FALSE,TRUE,FALSE
+M-16,,,2,hubble,Use of Solidity version 0.8.13 which has two known issues applicable to PuttyV2,348,View on GitHub,M,TRUE,FALSE,FALSE
+Q-42,Q-42,,Q,hubble,The strike cover amount can be locked for very long time in the putty contract,352,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-42,,60,Q,hubble,QA Report,428,View on GitHub,Q,TRUE,FALSE,FALSE
+H-04,,,3,hyh,Zero strike call options can be systemically used to steal premium from the taker,418,View on GitHub,H,TRUE,FALSE,FALSE
+M-01,M-01,,2,hyh,"Any failure of a transfer invalidates the whole order, allowing for exercise blocking attacks",434,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,hyh,Native funds sent over with an order are lost when not used,388,View on GitHub,M,FALSE,TRUE,FALSE
+M-15,,,2,hyh,Zero strike call options will avoid paying system fee,373,View on GitHub,M,TRUE,FALSE,FALSE
+M-13,M-13,,2,ignacio,Miners can influence the value of block.timestamp to perform Maximal Extractable Value (MEV) attacks.,110,View on GitHub,M,FALSE,TRUE,FALSE
+G-46,,10,G,ignacio,Gas Optimizations,2,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,ignacio,CALL() SHOULD BE USED INSTEAD OF TRANSFER() ON AN ADDRESS PAYABLE,3,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-02,,,2,IllIllI,Unbounded loops may cause `exercise()`s and `withdraw()`s to fail ,227,View on GitHub,M,TRUE,FALSE,FALSE
+M-03,,,2,IllIllI,"Put option sellers can prevent exercise by specifying zero amounts, or non-existant tokens",223,View on GitHub,M,TRUE,FALSE,FALSE
+M-05,,,2,IllIllI,"`fillOrder()` and `exercise()` may lock Ether sent to the contract, forever",226,View on GitHub,M,TRUE,FALSE,FALSE
+M-07,M-07,,2,IllIllI,Upgraded Q -> M from 228 [1657895129928],453,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,IllIllI,Put/call options may be lost if the maker/filler is unable to handle ERC-721 tokens,225,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,IllIllI,Makers may be unable to withdraw assets 'put' to them if the fee is zero,224,View on GitHub,M,FALSE,TRUE,FALSE
+Q-43,,90,Q,IllIllI,QA Report,228,View on GitHub,Q,TRUE,FALSE,FALSE
+G-47,,90,G,IllIllI,Gas Optimizations,229,View on GitHub,G,TRUE,FALSE,FALSE
+M-01,M-01,,2,itsmeSTYJ,Lack of whitelist can introduce bait and switch scams,89,View on GitHub,M,FALSE,TRUE,FALSE
+Q-44,,10,Q,itsmeSTYJ,Malicious long options can be used by makers to DOS takers,88,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,itsmeSTYJ,batchFillOrder does not handle ETH premiums properly,85,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-48,,35,G,jayfromthe13th,Gas Optimizations,344,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,jayfromthe13th,Avoid transfer()/send() as reentrancy mitigations. |  the gas repricing of opcodes may break deployed contracts |,346,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,jayfromthe13th,"Locked funds :has payable function, but no withdrawal functionality. Therefore, the funds will be locked in contract.",355,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,jayfromthe13th,Block values as time proxies,359,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,jayfromthe13th,manipulation of given supply through mint functionality | There is an absence of checks for the mint functionality which can lead to undesirable effects. |,370,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-45,,15,Q,JC,QA Report,435,View on GitHub,Q,TRUE,FALSE,FALSE
+G-49,,50,G,JC,Gas Optimizations,432,View on GitHub,G,TRUE,FALSE,FALSE
+M-05,M-05,,2,joestakey,Upgraded Q -> M from 163 [1657895640147],455,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,joestakey,Upgraded Q -> M from 163 [1657895636410],454,View on GitHub,M,FALSE,TRUE,FALSE
+Q-46,,80,Q,joestakey,QA Report,163,View on GitHub,Q,TRUE,FALSE,FALSE
+G-50,,70,G,joestakey,Gas Optimizations,162,View on GitHub,G,TRUE,FALSE,FALSE
+Q-47,,40,Q,JohnSmith,QA Report,74,View on GitHub,Q,TRUE,FALSE,FALSE
+G-51,,65,G,JohnSmith,Gas Optimizations,75,View on GitHub,G,TRUE,FALSE,FALSE
+Q-48,,30,Q,Kaiziron,QA Report,408,View on GitHub,Q,TRUE,FALSE,FALSE
+G-52,,20,G,Kaiziron,Gas Optimizations,384,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Kaiziron, Unchecked transfer,427,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-03,H-03,,3,Kenshin,Short Call Maker Asset Can Be Frozen,221,View on GitHub,H,FALSE,TRUE,FALSE
+M-01,M-01,,2,Kenshin,Upgraded Q -> M from 219 [1657897148559],457,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,Kenshin,Upgraded Q -> M from 219 [1657897144347],456,View on GitHub,M,FALSE,TRUE,FALSE
+Q-49,,20,Q,Kenshin,QA Report,219,View on GitHub,Q,TRUE,FALSE,FALSE
+G-53,,25,G,Kenshin,Gas Optimizations,220,View on GitHub,G,TRUE,FALSE,FALSE
+H-02,,,3,kirk-baird,`acceptCounterOffer()` May Result In Both Orders Being Filled,44,View on GitHub,H,TRUE,FALSE,FALSE
+M-01,,,2,kirk-baird,Malicious Token Contracts May Lead To Locking Orders,50,View on GitHub,M,TRUE,FALSE,FALSE
+M-05,M-05,,2,kirk-baird,Payable Functions May Cause ETH To Become Stuck,49,View on GitHub,M,FALSE,TRUE,FALSE
+M-08,,,2,kirk-baird,Overlap Between `ERC721.transferFrom()` and `ERC20.transferFrom()` Allows `order.erc20Assets` or `order.baseAsset` To Be ERC721 Rather Than ERC20,52,View on GitHub,M,TRUE,FALSE,FALSE
+G-54,,15,G,ladboy233,Gas Optimizations,111,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,ladboy233,Admin fee not retrievable by admin himself,112,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,ladboy233,Calling arbitrage ERC20 asset transfer is risky,120,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,ladboy233,Duplicate Order hash leads to unfilled order,121,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,ladboy233,block.timestamp is not reliable and leads to wrong expiration time.,122,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-02,H-02,,3,Lambda,Race condition for acceptCounterOffer,97,View on GitHub,H,FALSE,TRUE,FALSE
+M-04,M-04,,2,Lambda,Upgraded Q -> M from 45 [1657509796438],438,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,Lambda,"Fee transfer can fail for some tokens, causing withdraw to fail",48,View on GitHub,M,FALSE,TRUE,FALSE
+Q-50,Q-50,,Q,Lambda,Airdrops forever stuck in the contract,47,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-50,,50,Q,Lambda,QA Report,45,View on GitHub,Q,TRUE,FALSE,FALSE
+G-55,,15,G,Lambda,Gas Optimizations,46,View on GitHub,G,TRUE,FALSE,FALSE
+Q-51,,27,Q,Limbooo,QA Report,293,View on GitHub,Q,TRUE,FALSE,FALSE
+G-56,,35,G,Limbooo,Gas Optimizations,292,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Limbooo,ERC20 tokens with Fee-on-transfer logic are not supported,298,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-57,,25,G,m_Rassska,Gas Optimizations,41,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,m_Rassska,Unchecked .transfer() return value ,51,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-52,,25,Q,MadWookie,QA Report,235,View on GitHub,Q,TRUE,FALSE,FALSE
+G-58,,20,G,MadWookie,Gas Optimizations,234,View on GitHub,G,TRUE,FALSE,FALSE
+G-59,,25,G,mektigboy,Gas Optimizations,398,View on GitHub,G,TRUE,FALSE,FALSE
+H-03,H-03,,3,Metatron,Cannot create short call floorToken option,394,View on GitHub,H,FALSE,TRUE,FALSE
+M-04,M-04,,2,Metatron,[H-01] Owner does not get any fee when exercising a put,332,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,Metatron,[M-01] Fees can change during the order life-cycle,347,View on GitHub,M,FALSE,TRUE,FALSE
+Q-53,Q-53,,Q,Metatron,[M-02] Cancel is allowed even after the order was filled,353,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-53,,48,Q,Metatron,QA Report,429,View on GitHub,Q,TRUE,FALSE,FALSE
+G-60,,55,G,Metatron,Gas Optimizations,413,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Metatron,[H-02] Owner does not get any fee when call is expired,339,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-54,,20,Q,MiloTruck,QA Report,238,View on GitHub,Q,TRUE,FALSE,FALSE
+G-61,,70,G,MiloTruck,Gas Optimizations,237,View on GitHub,G,TRUE,FALSE,FALSE
+H-02,H-02,,3,minhquanym,Attacker may front-run `acceptCounterOffer()` cause users to take both original order and new one,252,View on GitHub,H,FALSE,TRUE,FALSE
+H-03,H-03,,3,minhquanym,Attacker can take premium from taker who fill short-call orders for free.,249,View on GitHub,H,FALSE,TRUE,FALSE
+M-07,M-07,,2,minhquanym,Upgraded Q -> M from 253 [1657932408647],459,View on GitHub,M,FALSE,TRUE,FALSE
+M-15,M-15,,2,minhquanym,Upgraded Q -> M from 253 [1657932404226],458,View on GitHub,M,FALSE,TRUE,FALSE
+G-62,,10,G,minhquanym,Gas Optimizations,262,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,minhquanym,QA Report,253,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-63,,25,G,mrpathfindr,Gas Optimizations,180,View on GitHub,G,TRUE,FALSE,FALSE
+G-64,,25,G,natzuu,Gas Optimizations,385,View on GitHub,G,TRUE,FALSE,FALSE
+Q-55,,30,Q,Nethermind,`cancel()` function does not check if the order already was filled at some point.,396,View on GitHub,Q,TRUE,FALSE,FALSE
+M-05,M-05,,2,oyc_109,protection from sending ETH,11,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,oyc_109,logic check for msg.value in fillOrder() is broken,12,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,oyc_109,logic check for msg.value in exercise() is broken,13,View on GitHub,M,FALSE,TRUE,FALSE
+Q-56,,15,Q,oyc_109,QA Report,10,View on GitHub,Q,TRUE,FALSE,FALSE
+G-65,,30,G,oyc_109,Gas Optimizations,9,View on GitHub,G,TRUE,FALSE,FALSE
+M-01,M-01,,2,pedroais,An attacker can make a scam with an  option that uses a real NFT but can't be exercised.,266,View on GitHub,M,FALSE,TRUE,FALSE
+M-09,M-09,,2,pedroais,An attacker can force a flash loan and get temporary ownership of any NFT held inside putty and perform arbitrary logic with it.,375,View on GitHub,M,FALSE,TRUE,FALSE
+Q-57,,10,Q,pedroais,setBaseURI() and setFee() functions are payable but don't perform any logic on assets,383,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,pedroais,Fake orders can be created for non existant tokens,397,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-05,M-05,,2,peritoflores,Weak `msg.value` checks in `fillOrder`  can make users lose ETH,360,View on GitHub,M,FALSE,TRUE,FALSE
+Q-58,,10,Q,peritoflores,Payable admin functions,338,View on GitHub,Q,TRUE,FALSE,FALSE
+M-10,M-10,,2,Picodes,Funds may be stuck when using a contract,431,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,,,2,Picodes,`fee` can change without the consent of users,422,View on GitHub,M,TRUE,FALSE,FALSE
+Q-59,Q-59,,Q,Picodes,`order.maker` can arbitrarily revoke its approval to cancel its signed orders.,414,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-59,,40,Q,Picodes,QA Report,393,View on GitHub,Q,TRUE,FALSE,FALSE
+G-66,,35,G,Picodes,Gas Optimizations,392,View on GitHub,G,TRUE,FALSE,FALSE
+H-03,H-03,,3,PwnedNoMore,[PNM-001] `short call` order with `order.floorTokens` non-empty will freeze users' funds,77,View on GitHub,H,FALSE,TRUE,FALSE
+G-67,,45,G,PwnedNoMore,Gas Optimizations,78,View on GitHub,G,TRUE,FALSE,FALSE
+Q-60,,10,Q,rajatbeladiya,QA Report,210,View on GitHub,Q,TRUE,FALSE,FALSE
+G-68,,15,G,rajatbeladiya,Gas Optimizations,214,View on GitHub,G,TRUE,FALSE,FALSE
+G-69,,25,G,Randyyy,Gas Optimizations,329,View on GitHub,G,TRUE,FALSE,FALSE
+M-08,M-08,,2,reassor,Upgraded Q -> M from 153 [1657934352278],463,View on GitHub,M,FALSE,TRUE,FALSE
+Q-61,Q-61,,Q,reassor,Emitting cancel event for filled orders,149,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-61,Q-61,,Q,reassor,ETH might get locked in the contract,151,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-61,Q-61,,Q,reassor,Missing pause functionality,152,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-61,,95,Q,reassor,QA Report,153,View on GitHub,Q,TRUE,FALSE,FALSE
+G-70,,30,G,reassor,Gas Optimizations,154,View on GitHub,G,TRUE,FALSE,FALSE
+G-71,,55,G,RedOneN,Gas Optimizations,334,View on GitHub,G,TRUE,FALSE,FALSE
+Q-62,,10,Q,ReyAdmirado,QA Report,289,View on GitHub,Q,TRUE,FALSE,FALSE
+G-72,,35,G,ReyAdmirado,Gas Optimizations,288,View on GitHub,G,TRUE,FALSE,FALSE
+M-05,M-05,,2,rfa,Possibility of fund (eth) lost,215,View on GitHub,M,FALSE,TRUE,FALSE
+G-73,,40,G,rfa,Gas Optimizations,391,View on GitHub,G,TRUE,FALSE,FALSE
+Q-63,,30,Q,robee,QA Report,99,View on GitHub,Q,TRUE,FALSE,FALSE
+G-74,,5,G,robee,Gas Optimizations,98,View on GitHub,G,TRUE,FALSE,FALSE
+Q-64,,30,Q,rokinot,QA Report,195,View on GitHub,Q,TRUE,FALSE,FALSE
+G-75,,50,G,rokinot,Gas Optimizations,182,View on GitHub,G,TRUE,FALSE,FALSE
+G-76,,5,G,Ruhum,Gas Optimizations,150,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Ruhum,Not blocking fee-on-transfer tokens entirely can result in a loss of funds,87,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-77,,20,G,sach1r0,Gas Optimizations,42,View on GitHub,G,TRUE,FALSE,FALSE
+G-78,,45,G,saian,Gas Optimizations,335,View on GitHub,G,TRUE,FALSE,FALSE
+Q-65,,35,Q,samruna,QA Report,25,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,samruna,Gas Optimizations,6,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,samruna,Gas Optimizations,7,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-66,,30,Q,saneryee,"The order maker can cancel the order, after it has been filled.",236,View on GitHub,Q,TRUE,FALSE,FALSE
+M-01,M-01,,2,sashik_eth,withdraw of assets batch could be blocked with one asset with malicious code,349,View on GitHub,M,FALSE,TRUE,FALSE
+M-02,M-02,,2,sashik_eth,Upgraded Q -> M from 358 [1657932899986],460,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,sashik_eth,Upgraded Q -> M from 358 [1657932904826],461,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,sashik_eth,withdraw() could be blocked if feeAmount would be 0 and baseAsset contract doesn’t allow for zero amount transfers,322,View on GitHub,M,FALSE,TRUE,FALSE
+Q-67,,30,Q,sashik_eth,QA Report,358,View on GitHub,Q,TRUE,FALSE,FALSE
+G-79,,55,G,sashik_eth,Gas Optimizations,313,View on GitHub,G,TRUE,FALSE,FALSE
+M-10,M-10,,2,shenwilly,Use `_safeMint` instead of `_mint`,231,View on GitHub,M,FALSE,TRUE,FALSE
+M-12,M-12,,2,shenwilly,Fee could be zero and reverts on transfer,232,View on GitHub,M,FALSE,TRUE,FALSE
+M-13,M-13,,2,shenwilly,Upgraded Q -> M from 233 [1657954928095],465,View on GitHub,M,FALSE,TRUE,FALSE
+Q-68,,20,Q,shenwilly,QA Report,233,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,shog00n,Multiple orders compared in the loop with msg.value leads to loss of funds or transaction failures,101,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-02,M-02,,2,shung,Upgraded Q -> M from 190 [1657955157754],466,View on GitHub,M,FALSE,TRUE,FALSE
+M-14,,,2,shung,Order cancellation is prone to frontrunning and is dependent on a centralized database,186,View on GitHub,M,TRUE,FALSE,FALSE
+Q-69,,65,Q,shung,QA Report,190,View on GitHub,Q,TRUE,FALSE,FALSE
+M-05,M-05,,2,simon135,Upgraded Q -> M from 279 [1657955636898],467,View on GitHub,M,FALSE,TRUE,FALSE
+Q-70,,20,Q,simon135,QA Report,279,View on GitHub,Q,TRUE,FALSE,FALSE
+G-80,,60,G,simon135,Gas Optimizations,274,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,simon135,"instead of call() , transfer() is used to withdraw the ether",276,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-81,,25,G,slywaters,Gas Optimizations,187,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,slywaters,QA Report,185,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-10,M-10,,2,Sm4rty,Upgraded Q -> M from 316 [1657933321396],462,View on GitHub,M,FALSE,TRUE,FALSE
+G-82,,25,G,Sm4rty,Gas Optimizations,320,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Sm4rty,Returned Value not checked when Depositing Eth,310,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Sm4rty,QA Report,316,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-71,,5,Q,Sneakyninja0129,Use a reentrancy guard ,198,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Sneakyninja0129,Unchecked transfer,196,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Sneakyninja0129,Uninitialized State Variables ,197,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-05,M-05,,2,sseefried,ETH can be sent to the contract accidentally and there is no way to get it back out,208,View on GitHub,M,FALSE,TRUE,FALSE
+M-08,M-08,,2,sseefried,ERC721 asset can be put into ERC20 field of order and is lost on `withdraw` after Exercised Long Put,202,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,sseefried,Function `setFee` can be called after `fillOrder`,211,View on GitHub,M,FALSE,TRUE,FALSE
+Q-72,,90,Q,sseefried,QA Report,212,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,sseefried,Short Put buyer can use ERC721 asset in multiple orders to receive more premiums,209,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-05,M-05,,2,StErMi,`PuttyV2`  `fillOrder` and `exercise` don't prevent ETH to be stuck,201,View on GitHub,M,FALSE,TRUE,FALSE
+Q-73,Q-73,,Q,StErMi,`fillOrder` allow the order to have `order.premium == 0` ,203,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-73,,60,Q,StErMi,QA Report,199,View on GitHub,Q,TRUE,FALSE,FALSE
+G-83,,25,G,StErMi,Gas Optimizations,200,View on GitHub,G,TRUE,FALSE,FALSE
+G-84,,5,G,StyxRave,Gas Optimizations,415,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,svskaushik,Gas Optimizations,356,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,svskaushik,Gas Optimizations,361,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,svskaushik,Gas Optimizations,365,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,svskaushik,Gas Optimizations,368,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,svskaushik,Gas Optimizations,386,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,svskaushik,Gas Optimizations,395,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-04,M-04,,2,swit,Some orders can be exercised without paying fees. Fee collect logic is not consistent with specification.,183,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,swit,Payable functions are not thoroughly checked. ETH can get stuck in the contract.,192,View on GitHub,M,FALSE,TRUE,FALSE
+G-85,,35,G,swit,Gas Optimizations,189,View on GitHub,G,TRUE,FALSE,FALSE
+G-86,,85,G,TerrierLover,Gas Optimizations,430,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,TerrierLover,Users can cancel irrelevant orders which do not exist,405,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-87,,45,G,Tomio,Gas Optimizations,26,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Tomio,QA Report,27,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-74,,48,Q,TomJ,QA Report,309,View on GitHub,Q,TRUE,FALSE,FALSE
+G-88,,65,G,TomJ,Gas Optimizations,270,View on GitHub,G,TRUE,FALSE,FALSE
+M-15,M-15,,2,Treasure-Seeker,Protocol does not make any fees on unexercised options,19,View on GitHub,M,FALSE,TRUE,FALSE
+Q-75,,5,Q,Treasure-Seeker,Lack of two-step procedure for transferring ownership is error prone,18,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Treasure-Seeker,Contract non-existence not checked before ERC 20 and ERC 721 transfers - can cause loss of funds due to all transfers succeeding for those contracts,20,View on GitHub,INVALID,FALSE,FALSE,TRUE
+M-12,M-12,,2,TrungOre,asset can be stucked in the contract if transfer 0 fee,267,View on GitHub,M,FALSE,TRUE,FALSE
+Q-76,Q-76,,Q,TrungOre,wrong comparision between `block.timestamp` and `positionExpirations` in `withdraw` function ,156,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-76,,42,Q,TrungOre,QA Report,281,View on GitHub,Q,TRUE,FALSE,FALSE
+M-01,M-01,,2,unforgiven,"Attacker can steal other users funds by signing malicious orders which looks profitable and tricking users (or by mistake) to call fillOrder(), the malicious order transfers PuttyV2 NFT token position of caller to attacker",410,View on GitHub,M,FALSE,TRUE,FALSE
+M-09,M-09,,2,unforgiven,It's possible to Use all PuttyV2 ERC20 and ERC721 token balances as free flash-loan by reentrancy in fillOrder() when filling specially crafted order (calling exercise() before fillOrder() collatral transfer),170,View on GitHub,M,FALSE,TRUE,FALSE
+M-10,M-10,,2,unforgiven,In fillOrder() code uses mint() function instead of safeMint() which can cause tokens to be lost if the destination contract couldn't handle ERC721 tokens,157,View on GitHub,M,FALSE,TRUE,FALSE
+M-11,M-11,,2,unforgiven,There is no proposal + time-lock for admin/DAO operation in setBaseURI() and setFee(),144,View on GitHub,M,FALSE,TRUE,FALSE
+M-13,M-13,,2,unforgiven,Contract allows to create orders with duration=0 but it's not possible to immediately exercise or withdraw those orders after filling because of strict expiration condition for positionExpirations (in general when block.timestamp==positionExpirations it's not possible to exercise or withdraw order),265,View on GitHub,M,FALSE,TRUE,FALSE
+M-13,M-13,,2,unforgiven,"block.timestamp is used for expiration of orders and positions in fillOrder, exercise and  withdraw which can create MEV and miners can cause griefing and DOS for other user's transactions by manipulating block.timestamp",326,View on GitHub,M,FALSE,TRUE,FALSE
+M-14,M-14,,2,unforgiven,"The code don't use nonce to identify orders, instead it uses order hash which is not best practice and could cause some issues like: duplicate nonce for different orders, can't quickly identify cancelled orders without order's all info, can't cancel multiple orders, can't cancel order without knowing order's all parameters",161,View on GitHub,M,FALSE,TRUE,FALSE
+Q-77,Q-77,,Q,unforgiven,maker can perform griefing attack for taker by front-running fillOrder() call and removing allowance or in signature check for contract(ERC1271),155,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-77,,45,Q,unforgiven,It's possible to cancel orders after they are filled and exercised which would make contract storage state to be in contradiction state,173,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,unforgiven,Fund lose because of contract logic don't consider deflationary tokens when transferring funds and there is no whitelist to validate supported tokens,145,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,unforgiven,fund steal by crating a lot of bad long positions and then transferring NFT token of long position to all users and trick them(or by mistake) to click on exercise(),350,View on GitHub,INVALID,FALSE,FALSE,TRUE
+G-89,,50,G,UnusualTurtle,Gas Optimizations,364,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,Wayne,Problems with the access control of the fillOrder() function,318,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,Wayne,Using SafeTransferLib as a transfer medium has a certain probability of causing problems,323,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-78,,25,Q,Waze,QA Report,168,View on GitHub,Q,TRUE,FALSE,FALSE
+G-90,,35,G,Waze,Gas Optimizations,166,View on GitHub,G,TRUE,FALSE,FALSE
+M-01,M-01,,2,xiaoming90,Option Cannot Be Exercised Due To Invalid ERC20/ERC721/FloorToken Within An Order,295,View on GitHub,M,FALSE,TRUE,FALSE
+M-02,M-02,,2,xiaoming90,Option Cannot Be Exercised Due To Unbounded Array Within An Order,294,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,xiaoming90,Payable Function `fillOrder()` Allows For Native ETH Transfer Causing Ether To Be Stuck,302,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,xiaoming90,Payable Function `exercise()` Allows For Native ETH Transfer Causing Ether To Be Stuck,303,View on GitHub,M,FALSE,TRUE,FALSE
+M-06,,,2,xiaoming90,[Denial-of-Service] Contract Owner Could Block Users From Withdrawing Their Strike,296,View on GitHub,M,TRUE,FALSE,FALSE
+M-10,M-10,,2,xiaoming90,Upgraded Q -> M from 306 [1657954489063],464,View on GitHub,M,FALSE,TRUE,FALSE
+M-13,M-13,,2,xiaoming90,Malicious Order Maker Can Set The Position To Expired Immediately After Being Filled,297,View on GitHub,M,FALSE,TRUE,FALSE
+Q-79,Q-79,,Q,xiaoming90,Lack Of 0 Amount Check Allows Malicious User To Create Large Number Of Orders,305,View on GitHub,Q,FALSE,TRUE,FALSE
+Q-79,,100,Q,xiaoming90,QA Report,306,View on GitHub,Q,TRUE,FALSE,FALSE
+INVALID,,,INVALID,xiaoming90,Not-yet-exist ERC20 Could Be Used Within An Order,299,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,xiaoming90,Incorrect EIP-712 Encoding For Array Within An Order,300,View on GitHub,INVALID,FALSE,FALSE,TRUE
+INVALID,,,INVALID,xiaoming90,Rebase And Fee-on-transfer Tokens Not Explicitly Blocked,301,View on GitHub,INVALID,FALSE,FALSE,TRUE
+Q-80,,10,Q,Yiko,QA Report,14,View on GitHub,Q,TRUE,FALSE,FALSE
+G-91,,5,G,Yiko,Gas Optimizations,15,View on GitHub,G,TRUE,FALSE,FALSE
+G-92,,35,G,z3s,Gas Optimizations,268,View on GitHub,G,TRUE,FALSE,FALSE
+G-93,,15,G,zeesaw,Gas Optimizations,147,View on GitHub,G,TRUE,FALSE,FALSE
+Q-81,,80,Q,zer0dot,QA Report,193,View on GitHub,Q,TRUE,FALSE,FALSE
+G-94,,40,G,zer0dot,Gas Optimizations,191,View on GitHub,G,TRUE,FALSE,FALSE
+INVALID,,,INVALID,zer0dot,Order Cancellation Can be Frontrun,134,View on GitHub,INVALID,FALSE,FALSE,TRUE
+H-01,,,3,zishansami,Fee is being deducted when Put is expired and not when it is exercised.,269,View on GitHub,H,TRUE,FALSE,FALSE
+H-01,H-01,,3,zzzitron,The fee is not paid as intended for put orders,376,View on GitHub,H,FALSE,TRUE,FALSE
+H-03,,,3,zzzitron,Create a short call order with non empty floor makes the option impossible to exercise and withdraw,369,View on GitHub,H,TRUE,FALSE,FALSE
+M-03,M-03,,2,zzzitron,Create a short put order with zero tokenAmount makes the option impossible to exercise,371,View on GitHub,M,FALSE,TRUE,FALSE
+M-05,M-05,,2,zzzitron,"When ETH is sent with `fillOrder` and `exercise` functions, the ETH can be lost",372,View on GitHub,M,FALSE,TRUE,FALSE
+Q-82,,55,Q,zzzitron,QA Report,378,View on GitHub,Q,TRUE,FALSE,FALSE

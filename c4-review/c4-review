@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+
+import sys
+import subprocess
+import csv
+import urllib.request
+from io import StringIO
+import json
+import argparse
+import dateutil.parser
+import datetime
+import re
+
+parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawTextHelpFormatter,
+                                  description="Takes judges review spreadsheet and provides stats. Estimates payout if you provide a handle")
+parser.add_argument('csv_file', type=str)
+parser.add_argument('pot_size', type=int, nargs='?')
+parser.add_argument('-w', '--handle', type=str, nargs='?')
+
+#
+# Functions
+#
+def get_records(csvr):
+  rs = []
+  headers = ["reportId", "duplicateOf", "score", "risk", "handle", "title", "issueId", "issueUrl", "gh_Risk", "gh_isOpen", "gh_isDuplicate", "gh_isInvalid"]
+  for row in csvr:
+    r = {}
+    for i in range(0, len(headers)):
+      r[headers[i]] = row[i]
+    rs.append(r)
+  return rs
+
+# def get_records_from_url(url):
+#   response = urllib.request.urlopen(url)
+#   csv_data = response.read()
+#   file = StringIO(bytes.decode(csv_data, "UTF-8"))
+#   csvr = csv.reader(file)
+#   return get_records(csvr)
+
+def get_records_from_file(f):
+  with open(f) as csv_file:
+    csvr = csv.reader(csv_file)
+    return get_records(csvr)
+
+
+def ppUSD(n):
+  return '${:0,.2f}'.format(round(n, 2))
+
+def ppMonth(epochTime):
+  dt = datetime.datetime.fromtimestamp(epochTime)
+  return dt.strftime("%B %Y")
+
+def ppTime(epochTime):
+  dt = datetime.datetime.fromtimestamp(epochTime)
+  return dt.isoformat();
+
+def isHigh(s):
+  return len(re.findall("^H-", s)) > 0
+
+def isMedium(s):
+  return len(re.findall("^M-", s)) > 0
+
+
+def run(ns):
+  rs = get_records_from_file(ns.csv_file)
+  h = {}
+  for r in rs:
+    id=r["reportId"]
+    if len(re.findall("^[HM]-", id)) >0: # HM sers!
+      if not id in h:
+        h[id] = { "id": id, "dups": 0, "handles": [], "lead": "unknown" }
+      if r["duplicateOf"] == "":
+        h[id]["lead"] = r["handle"]
+      h[id]["dups"] += 1
+      h[id]["handles"].append(r["handle"])
+  ## Calculate shares
+  totalShares = 0.0
+  for key in h:
+    baseShares = 10.0 if isHigh(key) else 3.0
+    dups = h[key]["dups"]
+    h[key]["sharesForIssue"] = baseShares * 0.9**(dups - 1)
+    h[key]["sharesPerDup"] = h[key]["sharesForIssue"] / dups
+    totalShares += h[key]["sharesForIssue"]
+
+  # A pass to calculate fractions and payouts
+  for key in h:
+    h[key]["fractionPerDup"] = h[key]["sharesPerDup"] / totalShares
+    if ns.pot_size != None:
+      h[key]["payoutPerDup"] = h[key]["fractionPerDup"] * ns.pot_size
+
+  # Summarise results for each handle
+  ws = {}
+  for id in h:
+    for w in h[id]["handles"]:
+      if not w in ws:
+        ws[w] = { "handle": w, "ids": [], "fraction": 0.0, "payout": 0.0 }
+      ws[w]["ids"].append({ "id": id, "dups": h[id]["dups"], "payoutPerDup": ppUSD(h[id]["payoutPerDup"])})
+      ws[w]["fraction"] += h[id]["fractionPerDup"]
+      if ns.pot_size != None:
+        ws[w]["payout"] += h[id]["payoutPerDup"]
+  for w in ws:
+    ws[w]["payout"] = ppUSD(ws[w]["payout"])
+
+
+  wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
+  wardenSummaries.sort(key=lambda r: -r["fraction"])
+
+
+
+
+  # One more pass to calculate rest of stats
+  # payoutForHandle = 0.0
+  # fractionForHandle = 0.0
+
+    # if ns.handle != None and ns.handle in h[key]["handles"]:
+    #   fractionForHandle += h[key]["fractionPerDup"]
+    #   if ns.pot_size != None:
+    #     payoutForHandle += h[key]["payoutPerDup"]
+    # if ns.pot_size != None:
+
+
+  # if ns.handle != None:
+  #   issues = [h[k] for k in h if ns.handle in h[k]['handles'] ]
+  # else:
+  #   issues = [h[k] for k in h] # convert to array
+  # issues.sort(key=lambda i: i["id"])
+  # result = { "issues": issues, "sharesForContest": totalShares }
+  # if ns.handle != None:
+  #   result["handle"] = ns.handle
+  #   result["fractionForHandle"] = fractionForHandle
+  #   if ns.pot_size != None:
+  #     result["payoutForHandle"] = ppUSD(payoutForHandle)
+  #   else:
+  #     result["payoutForHandle"] = ("Add -p/--pot-size option on command line to get dollar figure." +
+  #                       "Don't put in full pot size as this tool only handles Highs and Mediums")
+
+  result = { "results": wardenSummaries }
+  result["note"] = ("This tool only calculates shares for Highs and Mediums and will overestimate " +
+                    "a little. It does not take into account QA reports.")
+  return result
+
+ns = parser.parse_args(sys.argv[1:])
+result=run(ns)
+
+## Prints the records as valid JSON
+print(json.dumps(result, indent=2))
