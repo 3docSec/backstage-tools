@@ -39,14 +39,18 @@ echo "## Usage"
 echo
 fmtCmd "./c4-review --help"
 echo
-echo "## Without payouts"
+echo "## Findings summary"
 echo
-fmtCmd "./c4-review test-data/putty.csv" yes
+fmtCmd "./c4-review findings test-data/putty.csv 42500"
 echo
-echo "## With payouts"
+echo "## Fractions for each handle"
 echo
-fmtCmd "./c4-review test-data/putty.csv 42500" yes
+fmtCmd "./c4-review payouts test-data/putty.csv" yes
 echo
-echo "## Filter by warden"
-fmtCmd "./c4-review test-data/putty.csv 42500 -w sseefried" yes
+echo "## Payouts for each handle"
+echo
+fmtCmd "./c4-review payouts test-data/putty.csv 42500" yes
+echo
+echo "## Payouts for specific warden"
+fmtCmd "./c4-review payouts test-data/putty.csv 42500 -w sseefried" yes
 echo
