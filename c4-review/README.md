@@ -1,6 +1,6 @@
 ## Introduction
 
-With `c4-review` you can estimate your payout for contest given the judges spreadsheet.
+With `c4-review` you can estimate your payout for contest given the judges spreadsheet. Just export the Google Spreadsheet as a CSV file and try out one of the commands below.
 
 
 ----
