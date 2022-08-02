@@ -8,6 +8,8 @@
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $THIS_DIR
 
+MAX_LINES=150
+
 function fmtCmd() {
     echo "\`\`\`"
 	echo "\$ $1"
@@ -18,14 +20,18 @@ if [ "$2" = "" ]; then
 else
        echo "\`\`\`json"
 fi
-    LINES=$($1 | wc -l)
-    if [ "$LINES" -gt 100 ]; then
-	  $1 | head -100
+
+    FILE=$(mktemp output.XXXXX)
+    $1 > $FILE
+    LINES=$(cat "$FILE" | wc -l)
+    if [ "$LINES" -gt $MAX_LINES ]; then
+	  cat $FILE | head -n "$MAX_LINES"
 	  echo "\"... continued ...\""
 	else
-	  $1
+	  cat $FILE
     fi
 	echo "\`\`\`"
+	rm -f $FILE
 }
 
 

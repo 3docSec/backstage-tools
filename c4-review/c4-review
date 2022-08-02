@@ -96,7 +96,7 @@ def run(ns):
         ws[w] = { "handle": w, "ids": [], "fraction": 0.0 }
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
-      rec = { "id": id, "dups": h[id]["dups"] }
+      rec = { "id": id, "dups": h[id]["dups"], "leadFinding": h[id]["lead"], "handles": h[id]["handles"] }
       if ns.pot_size != None:
         rec["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
       ws[w]["ids"].append(rec)
