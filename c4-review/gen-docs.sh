@@ -21,7 +21,7 @@ fi
     LINES=$($1 | wc -l)
     if [ "$LINES" -gt 100 ]; then
 	  $1 | head -100
-	  echo "... continued ... "
+	  echo "\"... continued ...\""
 	else
 	  $1
     fi

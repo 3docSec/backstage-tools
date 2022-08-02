@@ -2,6 +2,14 @@
 
 With `c4-review` you can estimate your payout for contest given the judges spreadsheet. Just export the Google Spreadsheet as a CSV file and try out one of the commands below.
 
+For even prettier output pipe into the `jq` tool.
+
+e.g.
+
+```
+$ ./c4-review test-data/putty.csv 42500 | jq
+```
+
 
 ----
 
@@ -132,7 +140,7 @@ $ ./c4-review test-data/putty.csv
           "dups": 13
         },
         {
-... continued ...
+"... continued ..."
 ```
 
 ## With payouts
@@ -242,7 +250,7 @@ $ ./c4-review test-data/putty.csv 42500
     },
     {
       "handle": "berndartmueller",
-... continued ...
+"... continued ..."
 ```
 
 ## Filter by warden
