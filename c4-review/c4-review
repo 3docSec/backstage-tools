@@ -99,8 +99,8 @@ def getIssueSummary(ns):
   return { "totalShares": totalShares, "issueMap": h }
 
 def payout(ns):
-  h = getIssueSummary(ns)["issueMap"]
-
+  issueSummary = getIssueSummary(ns)
+  h = issueSummary["issueMap"]
   # Summarise results for each handle
   ws = {}
   for id in h:
@@ -124,7 +124,7 @@ def payout(ns):
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
   wardenSummaries.sort(key=lambda r: -r["fraction"])
 
-  rs = { "results": wardenSummaries }
+  rs = { "totalShares": issueSummary["totalShares"], "payouts": wardenSummaries }
   return rs
 
 def findings(ns):
