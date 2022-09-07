@@ -1,5 +1,10 @@
 # `c4-review`
 
+## Show your appreciation
+
+If you like this tool please let me know [here](https://github.com/code-423n4/backstage-tools/issues/1) by giving me a "reaction"
+
+
 ## Introduction
 
 With `c4-review` you can:
