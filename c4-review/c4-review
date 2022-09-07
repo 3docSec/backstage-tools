@@ -96,10 +96,10 @@ def getIssueSummary(ns):
     h[key]["fractionPerDup"] = h[key]["sharesPerDup"] / totalShares
     if ns.pot_size != None:
       h[key]["payoutPerDup"] = h[key]["fractionPerDup"] * ns.pot_size
-  return h
+  return { "totalShares": totalShares, "issueMap": h }
 
 def payout(ns):
-  h = getIssueSummary(ns)
+  h = getIssueSummary(ns)["issueMap"]
 
   # Summarise results for each handle
   ws = {}
@@ -128,13 +128,14 @@ def payout(ns):
   return rs
 
 def findings(ns):
-  h = getIssueSummary(ns)
+  issueSummary = getIssueSummary(ns)
+  h = issueSummary["issueMap"]
   for id in h:
     if "payoutPerDup" in h[id]:
       h[id]["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
   rs = [h[k] for k in h]
   rs.sort(key=lambda r: r["id"])
-  return { "results": rs }
+  return { "totalShares": issueSummary["totalShares"], "findings": rs }
 
 ns = parser.parse_args(sys.argv[1:])
 
