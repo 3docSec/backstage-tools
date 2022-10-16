@@ -10,6 +10,9 @@ import argparse
 import dateutil.parser
 import datetime
 import re
+import os.path
+
+BASE = 0.6 # Base for Sybil protection. Was once 0.9 but 0.6 since Oct 2022
 
 parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawTextHelpFormatter,
                                   description="Takes judges review spreadsheet and provides stats. Estimates payout if you provide a handle")
@@ -19,10 +22,12 @@ payout = subp.add_parser("payouts", description="Find out the fraction of total 
 payout.add_argument('csv_file', type=str)
 payout.add_argument('pot_size', type=int, nargs='?')
 payout.add_argument('-w', '--handle', type=str, nargs='?')
+payout.add_argument('-b', '--base', type=str,nargs=1)
 
 findings = subp.add_parser("findings", description="Summary of findings, including duplicate counts")
 findings.add_argument('csv_file', type=str)
 findings.add_argument('pot_size', type=int, nargs='?')
+findings.add_argument('-b', '--base', type=str,nargs=1)
 
 #
 # Functions
@@ -36,13 +41,6 @@ def get_records(csvr):
       r[headers[i]] = row[i]
     rs.append(r)
   return rs
-
-# def get_records_from_url(url):
-#   response = urllib.request.urlopen(url)
-#   csv_data = response.read()
-#   file = StringIO(bytes.decode(csv_data, "UTF-8"))
-#   csvr = csv.reader(file)
-#   return get_records(csvr)
 
 def get_records_from_file(f):
   with open(f) as csv_file:
@@ -87,7 +85,7 @@ def getIssueSummary(ns):
   for key in h:
     baseShares = 10.0 if isHigh(key) else 3.0
     dups = h[key]["dups"]
-    h[key]["sharesForIssue"] = baseShares * 0.9**(dups - 1)
+    h[key]["sharesForIssue"] = baseShares * BASE**(dups - 1)
     h[key]["sharesPerDup"] = h[key]["sharesForIssue"] / dups
     totalShares += h[key]["sharesForIssue"]
 
@@ -138,6 +136,24 @@ def findings(ns):
   return { "totalShares": issueSummary["totalShares"], "findings": rs }
 
 ns = parser.parse_args(sys.argv[1:])
+
+#
+# Set the base if the -b, --base flag is provided
+# or the csv_file if it is provided
+#
+def set_base(base, csv_file):
+  global BASE
+  if base != None:
+    BASE = float(base[0])
+  elif csv_file != None:
+    # Now check file name
+    prefix = re.findall("^[0-9][0-9][0-9][0-9]-[0-9][0-9]", os.path.basename(csv_file))
+    if len(prefix) > 0:
+      s = prefix[0]
+      if s <= "2022-10":
+        BASE=0.9
+
+set_base(ns.base, ns.csv_file)
 
 if ns.command == "payouts":
   result=payout(ns)
