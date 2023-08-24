@@ -1,54 +1,91 @@
 #!/usr/bin/env python3
 
 import sys
-import subprocess
-import csv
-import urllib.request
-from io import StringIO
 import json
 import argparse
-import dateutil.parser
 import datetime
-import re
 import os.path
+from github import Github
+from github import Auth
+
+gh_token = os.getenv("GITHUB_ACCESS_TOKEN")
+if not gh_token:
+  print("Github token not found.\nGenerate one at https://github.com/settings/tokens and set it to the GITHUB_ACCESS_TOKEN environment variable")
+  exit(1)
+
+g = Github(auth=Auth.Token(gh_token))
 
 BASE = 0.6 # Base for Sybil protection. Was once 0.9 but 0.6 since Oct 2022
 
 parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawTextHelpFormatter,
-                                  description="Takes judges review spreadsheet and provides stats. Estimates payout if you provide a handle")
+                                  description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
 subp = parser.add_subparsers(dest="command") # dest="command" means that we see which command was parsed
 
 base_help = f"Change base (default {BASE}) for Sybil protection e.g. --base=0.9 (for old comps)"
 
 payout = subp.add_parser("payouts", description="Find out the fraction of total pot or payouts")
-payout.add_argument('csv_file', type=str)
+payout.add_argument('findings_repo', type=str)
 payout.add_argument('pot_size', type=int, nargs='?')
 payout.add_argument('-w', '--handle', type=str, nargs='?')
 payout.add_argument('-b', '--base', type=str,nargs=1, help=base_help)
 
 findings = subp.add_parser("findings", description="Summary of findings, including duplicate counts")
-findings.add_argument('csv_file', type=str)
+findings.add_argument('findings_repo', type=str)
 findings.add_argument('pot_size', type=int, nargs='?')
 findings.add_argument('-b', '--base', type=str,nargs=1, help=base_help)
 
 #
 # Functions
-#
-def get_records(csvr):
-  rs = []
-  headers = ["reportId", "duplicateOf", "score", "risk", "handle", "title", "issueId", "issueUrl", "gh_Risk", "gh_isOpen", "gh_isDuplicate", "gh_isInvalid"]
-  for row in csvr:
-    r = {}
-    for i in range(0, len(headers)):
-      r[headers[i]] = row[i]
-    rs.append(r)
-  return rs
 
-def get_records_from_file(f):
-  with open(f) as csv_file:
-    csvr = csv.reader(csv_file)
-    return get_records(csvr)
+def get_records_from_gh(ns):
+  repo = g.get_repo(f"code-423n4/{ns.findings_repo}")
 
+  # build issue-to-handle map
+  handles = {}
+
+  contents = repo.get_contents("data")
+  for content in contents:
+    if content.name.endswith(".json"):
+      handle, issueId = content.name.replace(".json", "").rsplit("-", 1)
+      handles[issueId] = handle
+
+  issues = repo.get_issues(state="all")
+  ret = []
+  # headers = ["reportId", "duplicateOf", "score", "risk", "handle", "title", "issueId", "issueUrl", "gh_Risk", "gh_isOpen", "gh_isDuplicate", "gh_isInvalid"]
+  for i in issues:
+    if 'unsatisfactory' in i.labels:
+      continue
+
+    duplicateOf = ""
+    issueId = str(i.number)
+    reportId = issueId
+    severity = None
+    skip = False
+
+    for l in i.labels:
+      if l.name.startswith("duplicate-"):
+        duplicateOf = l.name.replace("duplicate-", "")
+        reportId = duplicateOf
+      elif l.name == "2 (Med Risk)":
+        severity = "M"
+      elif l.name == "3 (High Risk)":
+        severity = "H"
+      elif l.name in ["unsatisfactory", "invalid", "withdrawn by warden"]:
+        skip = True
+        break
+
+    if skip or severity is None:
+      continue
+
+    ret.append({
+      "issueId": issueId,
+      "reportId": reportId,
+      "duplicateOf": duplicateOf,
+      "severity": severity,
+      "handle": handles[issueId],
+    })
+
+  return ret
 
 def ppUSD(n):
   return '${:0,.2f}'.format(round(n, 2))
@@ -62,34 +99,34 @@ def ppTime(epochTime):
   return dt.isoformat();
 
 def isHigh(s):
-  return len(re.findall("^H-", s)) > 0
+  return s["severity"] == "H"
 
 def isMedium(s):
-  return len(re.findall("^M-", s)) > 0
-
+  return s["severity"] == "M"
 
 def getIssueSummary(ns):
-  rs = get_records_from_file(ns.csv_file)
+  rs = get_records_from_gh(ns)
   h = {}
   for r in rs:
     id=r["reportId"]
-    if len(re.findall("^[HM]-", id)) >0: # HM sers!
-      if not id in h:
-        h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [] }
-      if r["duplicateOf"] == "":
-        h[id]["leadFinding"] = r["handle"]
-        h[id]["githubIssueId"] = r["issueId"]
-      if not r["handle"] in h[id]["handles"]:
-        h[id]["dups"] += 1
-        h[id]["handles"].append(r["handle"])
+    if not id in h:
+      h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"] }
+    if r["duplicateOf"] == "":
+      h[id]["leadFinding"] = r["handle"]
+      h[id]["githubIssueId"] = r["issueId"]
+    if not r["handle"] in h[id]["handles"]:
+      h[id]["dups"] += 1
+      h[id]["handles"].append(r["handle"])
+
   ## Calculate shares
   totalShares = 0.0
   for key in h:
-    baseShares = 10.0 if isHigh(key) else 3.0
+    baseShares = 10.0 if isHigh(h[key]) else 3.0
     dups = h[key]["dups"]
     h[key]["sharesForIssue"] = baseShares * BASE**(dups - 1)
     h[key]["sharesPerDup"] = h[key]["sharesForIssue"] / dups
-    totalShares += h[key]["sharesForIssue"]
+    # also include the 30% bonus to the finding selected for report
+    totalShares += h[key]["sharesForIssue"] + h[key]["sharesPerDup"] * 0.3
 
   # A pass to calculate fractions and payouts
   for key in h:
@@ -109,13 +146,19 @@ def payout(ns):
         ws[w] = { "handle": w, "findings": [], "fraction": 0.0 }
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
-      rec = { "id": id, "dups": h[id]["dups"], "fractionPerDup": h[id]["fractionPerDup"] }
+      isLeadFinding = h[id]["leadFinding"] == w
+      rec = { "id": id, "dups": h[id]["dups"], "fractionPerDup": h[id]["fractionPerDup"], "isLeadFinding": isLeadFinding }
       if ns.pot_size != None:
         rec["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
       ws[w]["findings"].append(rec)
-      ws[w]["fraction"] += h[id]["fractionPerDup"]
+
+      factor = 1.0
+      if isLeadFinding:
+        factor = 1.3 # 30% shares bonus
+
+      ws[w]["fraction"] += h[id]["fractionPerDup"] * factor
       if ns.pot_size != None:
-        ws[w]["payout"] += h[id]["payoutPerDup"]
+        ws[w]["payout"] += h[id]["payoutPerDup"] * factor
   if ns.pot_size != None:
     for w in ws:
       ws[w]["payout"] = ppUSD(ws[w]["payout"])
@@ -143,19 +186,14 @@ ns = parser.parse_args(sys.argv[1:])
 # Set the base if the -b, --base flag is provided
 # or the csv_file if it is provided
 #
-def set_base(base, csv_file):
+def set_base(base):
   global BASE
   if base != None:
     BASE = float(base[0])
-  elif csv_file != None:
-    # Now check file name
-    prefix = re.findall("^[0-9][0-9][0-9][0-9]-[0-9][0-9]", os.path.basename(csv_file))
-    if len(prefix) > 0:
-      s = prefix[0]
-      if s <= "2022-10":
-        BASE=0.9
+  else:
+    BASE=0.9
 
-set_base(ns.base, ns.csv_file)
+set_base(ns.base)
 
 if ns.command == "payouts":
   result=payout(ns)

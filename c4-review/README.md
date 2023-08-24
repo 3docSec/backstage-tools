@@ -9,19 +9,28 @@ If you like this tool please let me know [here](https://github.com/code-423n4/ba
 
 With `c4-review` you can:
 - see a summary of the findings with duplicate counts and a list of handles that found each issue
-- estimate your contest payout given the Judge's Review spreadsheet.
+- estimate your contest payout given the current status of the GitHub finding repo.
 
-Just export the Google Spreadsheet as a CSV file and try out one of the commands below.
+Just find out the findings repo name of the contest you look for and try out one of the commands below.
 
 For even prettier output just pipe the command into the `jq` tool.
 
 e.g.
 
 ```
-$ ./c4-review payouts test-data/putty.csv 42500 | jq
+$ ./c4-review payouts 2023-08-goodentry-findings 46000 | jq
 ```
 
 ----
+
+## Installation
+`c4-review` is an executable script you can run as a shell command. 
+
+Before running it, you'll need to:
+- install Python 3 if you haven't already
+- install [PyGithub](https://github.com/PyGithub/PyGithub)
+- generate [a GitHub access token](https://github.com/settings/tokens) with `repository` access
+- set the token generated above to the `GITHUB_ACCESS_TOKEN` environment variable 
 
 ## Usage
 
@@ -34,7 +43,7 @@ $ ./c4-review --help
 ```
 usage: c4-review [-h] {payouts,findings} ...
 
-Takes judges review spreadsheet and provides stats. Estimates payout if you provide a handle
+Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle
 
 positional arguments:
   {payouts,findings}
@@ -49,12 +58,12 @@ $ ./c4-review findings --help
 ```
 
 ```
-usage: c4-review findings [-h] csv_file [pot_size]
+usage: c4-review findings [-h] findings_repo [pot_size]
 
 Summary of findings, including duplicate counts
 
 positional arguments:
-  csv_file
+  findings_repo
   pot_size
 
 options:
@@ -67,12 +76,12 @@ $ ./c4-review payouts --help
 ```
 
 ```
-usage: c4-review payouts [-h] [-w [HANDLE]] csv_file [pot_size]
+usage: c4-review payouts [-h] [-w [HANDLE]] findings_repo [pot_size]
 
 Find out the fraction of total pot or payouts
 
 positional arguments:
-  csv_file
+  findings_repo
   pot_size
 
 options:
@@ -81,518 +90,207 @@ options:
 ```
 
 ## Findings summary
+Note: the below examples use data taken from an actual contest - [Amphora protocol](https://code4rena.com/contests/2023-07-amphora-protocol))
 
 ```
-$ ./c4-review findings test-data/putty.csv 42500
+$ ./c4-review findings 2023-07-amphora-findings 46250
 ```
 
 ```json
-{
-  "totalShares": 55.257356918267334,
+{                                                                                                                                                                                 [60/25031]
+  "totalShares": 32.48464550591162,
   "findings": [
     {
-      "id": "H-01",
-      "dups": 7,
-      "leadFinding": "zishansami",
+      "id": "233",
+      "dups": 1,
+      "leadFinding": "ljmanini",
       "handles": [
-        "0x52",
-        "0xsanson",
-        "auditor0517",
-        "berndartmueller",
-        "csanuragjain",
-        "zishansami",
-        "zzzitron"
+        "ljmanini"
       ],
-      "githubIssueId": "269",
-      "sharesForIssue": 5.3144100000000005,
-      "sharesPerDup": 0.7592014285714287,
-      "fractionPerDup": 0.013739372834903852,
-      "payoutPerDup": "$583.92"
+      "severity": "M",
+      "githubIssueId": "233",
+      "sharesForIssue": 3.0,
+      "sharesPerDup": 3.0,
+      "fractionPerDup": 0.09235132331839835,
+      "payoutPerDup": "$4,271.25"
     },
     {
-      "id": "H-02",
-      "dups": 5,
-      "leadFinding": "kirk-baird",
+      "id": "256",
+      "dups": 19,
+      "leadFinding": "giovannidisiena",
       "handles": [
-        "csanuragjain",
-        "hansfriese",
-        "kirk-baird",
-        "Lambda",
-        "minhquanym"
+        "josephdara",
+        "mert_eren",
+        "adeolu",
+        "ak1",
+        "pep7siup",
+        "Bauchibred",
+        "qpzm",
+        "SanketKogekar",
+        "said",
+        "giovannidisiena",
+        "Giorgio",
+        "ljmanini",
+        "Musaka",
+        "SpicyMeatball",
+        "0xbranded",
+        "0xComfyCat",
+        "0xWaitress",
+        "erebus",
+        "kutugu"
       ],
-      "githubIssueId": "44",
-      "sharesForIssue": 6.561,
-      "sharesPerDup": 1.3122,
-      "fractionPerDup": 0.023747064159093077,
-      "payoutPerDup": "$1,009.25"
+      "severity": "H",
+      "githubIssueId": "256",
+      "sharesForIssue": 1.5009463529699918,
+      "sharesPerDup": 0.07899717647210483,
+      "fractionPerDup": 0.002431831261871975,
+      "payoutPerDup": "$112.47"
     },
-    {
-      "id": "H-03",
-      "dups": 6,
-      "leadFinding": "zzzitron",
-      "handles": [
-        "danb",
-        "Kenshin",
-        "Metatron",
-        "minhquanym",
-        "PwnedNoMore",
-        "zzzitron"
-      ],
-      "githubIssueId": "369",
-      "sharesForIssue": 5.9049000000000005,
-      "sharesPerDup": 0.9841500000000001,
-      "fractionPerDup": 0.01781029811931981,
-      "payoutPerDup": "$756.94"
-    },
-    {
-      "id": "H-04",
-      "dups": 2,
-      "leadFinding": "hyh",
-      "handles": [
-        "hansfriese",
-        "hyh"
-      ],
-      "githubIssueId": "418",
-      "sharesForIssue": 9.0,
-      "sharesPerDup": 4.5,
-      "fractionPerDup": 0.08143711988715047,
-      "payoutPerDup": "$3,461.08"
-    },
-    {
-      "id": "M-01",
-      "dups": 14,
-      "leadFinding": "kirk-baird",
-      "handles": [
-        "0xA5DF",
-        "cccz",
-        "chatch",
-        "csanuragjain",
-        "GalloDaSballo",
-        "hansfriese",
-        "hyh",
-        "itsmeSTYJ",
-        "Kenshin",
-        "kirk-baird",
-        "pedroais",
-        "sashik_eth",
-        "unforgiven",
-        "xiaoming90"
-      ],
-      "githubIssueId": "50",
-      "sharesForIssue": 0.7625597484987002,
-      "sharesPerDup": 0.054468553464192875,
-      "fractionPerDup": 0.0009857249152318088,
-      "payoutPerDup": "$41.89"
-    },
-    {
-      "id": "M-02",
-      "dups": 5,
-      "leadFinding": "IllIllI",
-      "handles": [
-        "0xNineDec",
-        "IllIllI",
-        "sashik_eth",
-        "shung",
-        "xiaoming90"
-      ],
-      "githubIssueId": "227",
-      "sharesForIssue": 1.9683000000000002,
-      "sharesPerDup": 0.39366,
-      "fractionPerDup": 0.007124119247727923,
-      "payoutPerDup": "$302.78"
-    },
-    {
-      "id": "M-03",
-      "dups": 4,
-      "leadFinding": "IllIllI",
-      "handles": [
-        "0xNineDec",
-        "exd0tpy",
-        "IllIllI",
-        "zzzitron"
-      ],
-      "githubIssueId": "223",
-      "sharesForIssue": 2.1870000000000003,
-      "sharesPerDup": 0.5467500000000001,
-      "fractionPerDup": 0.009894610066288783,
-      "payoutPerDup": "$420.52"
-    },
-    {
-      "id": "M-04",
-      "dups": 6,
-      "leadFinding": "berndartmueller",
-      "handles": [
-        "0xsanson",
-        "berndartmueller",
-        "hubble",
-        "Lambda",
-        "Metatron",
-        "swit"
-      ],
-      "githubIssueId": "285",
-      "sharesForIssue": 1.7714700000000003,
-      "sharesPerDup": 0.29524500000000004,
-      "fractionPerDup": 0.005343089435795942,
-      "payoutPerDup": "$227.08"
-    },
-    {
-      "id": "M-05",
-"... continued ..."
+    "... continued ..."
+  ],
+  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
+}
 ```
 
 ## Fractions for each handle
 
 ```
-$ ./c4-review payouts test-data/putty.csv
+$ ./c4-review payouts 2023-07-amphora-findings
 ```
 
 ```json
 {
-  "totalShares": 55.257356918267334,
+  "totalShares": 32.48464550591162,
   "payouts": [
     {
-      "handle": "hansfriese",
+      "handle": "minhtrng",
       "findings": [
         {
-          "id": "M-05",
-          "dups": 27,
-          "fractionPerDup": 0.00012991898775645668
+          "id": "414",
+          "dups": 1,
+          "fractionPerDup": 0.09235132331839835,
+          "isLeadFinding": true
         },
         {
-          "id": "M-01",
-          "dups": 14,
-          "fractionPerDup": 0.0009857249152318088
-        },
-        {
-          "id": "M-12",
-          "dups": 8,
-          "fractionPerDup": 0.003245926832246035
-        },
-        {
-          "id": "H-02",
-          "dups": 5,
-          "fractionPerDup": 0.023747064159093077
-        },
-        {
-          "id": "H-04",
+          "id": "301",
           "dups": 2,
-          "fractionPerDup": 0.08143711988715047
+          "fractionPerDup": 0.13852698497759752,
+          "isLeadFinding": false
         }
       ],
-      "fraction": 0.10954575478147785
+      "fraction": 0.25858370529151536
     },
     {
-      "handle": "hyh",
+      "handle": "said",
       "findings": [
         {
-          "id": "M-05",
-          "dups": 27,
-          "fractionPerDup": 0.00012991898775645668
-        },
-        {
-          "id": "M-01",
-          "dups": 14,
-          "fractionPerDup": 0.0009857249152318088
-        },
-        {
-          "id": "M-15",
-          "dups": 4,
-          "fractionPerDup": 0.009894610066288783
-        },
-        {
-          "id": "H-04",
+          "id": "301",
           "dups": 2,
-          "fractionPerDup": 0.08143711988715047
+          "fractionPerDup": 0.13852698497759752,
+          "isLeadFinding": true
+        },
+        {
+          "id": "256",
+          "dups": 19,
+          "fractionPerDup": 0.002431831261871975,
+          "isLeadFinding": false
         }
       ],
-      "fraction": 0.09244737385642751
+      "fraction": 0.18251691173274875
     },
-    {
-      "handle": "minhquanym",
-      "findings": [
-        {
-          "id": "M-07",
-          "dups": 3,
-          "fractionPerDup": 0.014658681579687085
-        },
-        {
-          "id": "H-02",
-          "dups": 5,
-          "fractionPerDup": 0.023747064159093077
-        },
-        {
-          "id": "M-15",
-          "dups": 4,
-          "fractionPerDup": 0.009894610066288783
-        },
-        {
-          "id": "H-03",
-          "dups": 6,
-          "fractionPerDup": 0.01781029811931981
-        }
-      ],
-      "fraction": 0.06611065392438875
-    },
-    {
-      "handle": "csanuragjain",
-      "findings": [
-        {
-          "id": "H-01",
-          "dups": 7,
-          "fractionPerDup": 0.013739372834903852
-        },
-        {
-          "id": "M-01",
-          "dups": 14,
-          "fractionPerDup": 0.0009857249152318088
-        },
-        {
-          "id": "M-10",
-          "dups": 15,
-          "fractionPerDup": 0.0008280089287947194
-        },
-        {
-          "id": "H-02",
-          "dups": 5,
-          "fractionPerDup": 0.023747064159093077
-        },
-        {
-          "id": "M-15",
-          "dups": 4,
-          "fractionPerDup": 0.009894610066288783
-        }
-      ],
-      "fraction": 0.049194780904312244
-    },
-    {
-      "handle": "berndartmueller",
-      "findings": [
-        {
-          "id": "M-05",
-          "dups": 27,
-          "fractionPerDup": 0.00012991898775645668
-        },
-        {
-          "id": "H-01",
-          "dups": 7,
-          "fractionPerDup": 0.013739372834903852
-        },
-        {
-          "id": "M-10",
-          "dups": 15,
-          "fractionPerDup": 0.0008280089287947194
-        },
-        {
-          "id": "M-11",
-          "dups": 13,
-          "fractionPerDup": 0.0011794998985679764
-        },
-        {
-          "id": "M-04",
-          "dups": 6,
-          "fractionPerDup": 0.005343089435795942
-        },
-        {
-          "id": "M-12",
-          "dups": 8,
-          "fractionPerDup": 0.003245926832246035
-        },
-"... continued ..."
+    "... continued ..."
+  ],
+  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
+}
 ```
 
 ## Payouts for each handle
 
 ```
-$ ./c4-review payouts test-data/putty.csv 42500
+$ ./c4-review payouts 2023-07-amphora-findings 46250
 ```
 
 ```json
 {
-  "totalShares": 55.257356918267334,
+  "totalShares": 32.48464550591162,
   "payouts": [
     {
-      "handle": "hansfriese",
+      "handle": "minhtrng",
       "findings": [
         {
-          "id": "H-02",
-          "dups": 5,
-          "fractionPerDup": 0.023747064159093077,
-          "payoutPerDup": "$1,009.25"
-        },
-        {
-          "id": "H-04",
+          "id": "301",
           "dups": 2,
-          "fractionPerDup": 0.08143711988715047,
-          "payoutPerDup": "$3,461.08"
+          "fractionPerDup": 0.13852698497759752,
+          "isLeadFinding": false,
+          "payoutPerDup": "$6,406.87"
         },
         {
-          "id": "M-01",
-          "dups": 14,
-          "fractionPerDup": 0.0009857249152318088,
-          "payoutPerDup": "$41.89"
-        },
-        {
-          "id": "M-05",
-          "dups": 27,
-          "fractionPerDup": 0.00012991898775645668,
-          "payoutPerDup": "$5.52"
-        },
-        {
-          "id": "M-12",
-          "dups": 8,
-          "fractionPerDup": 0.003245926832246035,
-          "payoutPerDup": "$137.95"
+          "id": "414",
+          "dups": 1,
+          "fractionPerDup": 0.09235132331839835,
+          "isLeadFinding": true,
+          "payoutPerDup": "$4,271.25"
         }
       ],
-      "fraction": 0.10954575478147785,
-      "payout": "$4,655.69"
+      "fraction": 0.25858370529151536,
+      "payout": "$11,959.50"
     },
     {
-      "handle": "hyh",
+      "handle": "said",
       "findings": [
         {
-          "id": "H-04",
+          "id": "256",
+          "dups": 19,
+          "fractionPerDup": 0.002431831261871975,
+          "isLeadFinding": false,
+          "payoutPerDup": "$112.47"
+        },
+        {
+          "id": "301",
           "dups": 2,
-          "fractionPerDup": 0.08143711988715047,
-          "payoutPerDup": "$3,461.08"
-        },
-        {
-          "id": "M-01",
-          "dups": 14,
-          "fractionPerDup": 0.0009857249152318088,
-          "payoutPerDup": "$41.89"
-        },
-        {
-          "id": "M-05",
-          "dups": 27,
-          "fractionPerDup": 0.00012991898775645668,
-          "payoutPerDup": "$5.52"
-        },
-        {
-          "id": "M-15",
-          "dups": 4,
-          "fractionPerDup": 0.009894610066288783,
-          "payoutPerDup": "$420.52"
+          "fractionPerDup": 0.13852698497759752,
+          "isLeadFinding": true,
+          "payoutPerDup": "$6,406.87"
         }
       ],
-      "fraction": 0.09244737385642751,
-      "payout": "$3,929.01"
+      "fraction": 0.18251691173274875,
+      "payout": "$8,441.41"
     },
-    {
-      "handle": "minhquanym",
-      "findings": [
-        {
-          "id": "H-02",
-          "dups": 5,
-          "fractionPerDup": 0.023747064159093077,
-          "payoutPerDup": "$1,009.25"
-        },
-        {
-          "id": "H-03",
-          "dups": 6,
-          "fractionPerDup": 0.01781029811931981,
-          "payoutPerDup": "$756.94"
-        },
-        {
-          "id": "M-07",
-          "dups": 3,
-          "fractionPerDup": 0.014658681579687085,
-          "payoutPerDup": "$622.99"
-        },
-        {
-          "id": "M-15",
-          "dups": 4,
-          "fractionPerDup": 0.009894610066288783,
-          "payoutPerDup": "$420.52"
-        }
-      ],
-      "fraction": 0.06611065392438875,
-      "payout": "$2,809.70"
-    },
-    {
-      "handle": "csanuragjain",
-      "findings": [
-        {
-          "id": "H-01",
-          "dups": 7,
-          "fractionPerDup": 0.013739372834903852,
-          "payoutPerDup": "$583.92"
-        },
-        {
-          "id": "H-02",
-          "dups": 5,
-          "fractionPerDup": 0.023747064159093077,
-          "payoutPerDup": "$1,009.25"
-        },
-        {
-          "id": "M-01",
-          "dups": 14,
-          "fractionPerDup": 0.0009857249152318088,
-          "payoutPerDup": "$41.89"
-        },
-        {
-          "id": "M-10",
-          "dups": 15,
-          "fractionPerDup": 0.0008280089287947194,
-          "payoutPerDup": "$35.19"
-        },
-        {
-          "id": "M-15",
-          "dups": 4,
-          "fractionPerDup": 0.009894610066288783,
-          "payoutPerDup": "$420.52"
-        }
-      ],
-      "fraction": 0.049194780904312244,
-      "payout": "$2,090.78"
-    },
-    {
-      "handle": "berndartmueller",
-      "findings": [
-        {
-          "id": "H-01",
-          "dups": 7,
-          "fractionPerDup": 0.013739372834903852,
-          "payoutPerDup": "$583.92"
-        },
-        {
-          "id": "M-04",
-"... continued ..."
+    "... continued ...",
+  ],
+  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
+}
 ```
 
 ## Payouts for specific warden
 ```
-$ ./c4-review payouts test-data/putty.csv 42500 -w sseefried
+$ ./c4-review payouts 2023-07-amphora-findings 46250 -w said
 ```
 
 ```json
 {
-  "totalShares": 55.257356918267334,
+  "totalShares": 32.48464550591162,
   "payouts": [
     {
-      "handle": "sseefried",
+      "handle": "said",
       "findings": [
         {
-          "id": "M-05",
-          "dups": 27,
-          "fractionPerDup": 0.00012991898775645668,
-          "payoutPerDup": "$5.52"
+          "id": "256",
+          "dups": 19,
+          "fractionPerDup": 0.002431831261871975,
+          "isLeadFinding": false,
+          "payoutPerDup": "$112.47"
         },
         {
-          "id": "M-08",
-          "dups": 3,
-          "fractionPerDup": 0.014658681579687085,
-          "payoutPerDup": "$622.99"
-        },
-        {
-          "id": "M-11",
-          "dups": 13,
-          "fractionPerDup": 0.0011794998985679764,
-          "payoutPerDup": "$50.13"
+          "id": "301",
+          "dups": 2,
+          "fractionPerDup": 0.13852698497759752,
+          "isLeadFinding": true,
+          "payoutPerDup": "$6,406.87"
         }
       ],
-      "fraction": 0.015968100466011517,
-      "payout": "$678.64"
+      "fraction": 0.18251691173274875,
+      "payout": "$8,441.41"
     }
   ],
   "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
