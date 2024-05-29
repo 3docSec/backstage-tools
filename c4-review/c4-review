@@ -14,6 +14,8 @@ if not gh_token:
   exit(1)
 
 g = Github(auth=Auth.Token(gh_token))
+handles = {}
+disputed_reports = set()
 
 BASE = 0.6 # Base for Sybil protection. Was once 0.9 but 0.6 since Oct 2022
 
@@ -37,30 +39,27 @@ findings.add_argument('-b', '--base', type=str,nargs=1, help=base_help)
 #
 # Functions
 
-def get_records_from_gh(ns):
-  repo = g.get_repo(f"code-423n4/{ns.findings_repo}")
-
+def get_participants_from_gh(repo):
   # build issue-to-handle map
-  handles = {}
+  b = repo.get_branch(repo.default_branch)
+  t = repo.get_git_tree(b.commit.sha, recursive=True)
 
-  contents = repo.get_contents("data")
-  for content in contents:
-    if content.name.endswith(".json"):
-      handle, issueId = content.name.replace(".json", "").rsplit("-", 1)
+  for content in t.tree:
+    if content.path.endswith(".json"):
+      handle, issueId = content.path.split("/")[-1].replace(".json", "").rsplit("-", 1)
       handles[issueId] = handle
 
+def get_records_from_gh(ns, repo):
   issues = repo.get_issues(state="all")
   ret = []
   # headers = ["reportId", "duplicateOf", "score", "risk", "handle", "title", "issueId", "issueUrl", "gh_Risk", "gh_isOpen", "gh_isDuplicate", "gh_isInvalid"]
   for i in issues:
-    if 'unsatisfactory' in i.labels:
-      continue
-
     duplicateOf = ""
     issueId = str(i.number)
     reportId = issueId
     severity = None
     skip = False
+    percentage = 100
 
     for l in i.labels:
       if l.name.startswith("duplicate-"):
@@ -70,9 +69,8 @@ def get_records_from_gh(ns):
         severity = "M"
       elif l.name == "3 (High Risk)":
         severity = "H"
-      elif l.name in ["unsatisfactory", "invalid", "withdrawn by warden"]:
+      elif l.name in ['unsatisfactory']:
         skip = True
-        break
 
     if skip or severity is None:
       continue
@@ -82,7 +80,8 @@ def get_records_from_gh(ns):
       "reportId": reportId,
       "duplicateOf": duplicateOf,
       "severity": severity,
-      "handle": handles[issueId],
+      "handle": handles.get(issueId, "unknown"),
+      "percentage": percentage
     })
 
   return ret
@@ -105,12 +104,17 @@ def isMedium(s):
   return s["severity"] == "M"
 
 def getIssueSummary(ns):
-  rs = get_records_from_gh(ns)
+  repo = g.get_repo(f"code-423n4/{ns.findings_repo}")
+  get_participants_from_gh(repo)
+  rs = get_records_from_gh(ns, repo)
+
   h = {}
   for r in rs:
     id=r["reportId"]
+    # if id in disputed_reports:
+    #   continue
     if not id in h:
-      h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"] }
+      h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "percentage": r["percentage"] }
     if r["duplicateOf"] == "":
       h[id]["leadFinding"] = r["handle"]
       h[id]["githubIssueId"] = r["issueId"]
@@ -132,40 +136,88 @@ def getIssueSummary(ns):
   for key in h:
     h[key]["fractionPerDup"] = h[key]["sharesPerDup"] / totalShares
     if ns.pot_size != None:
-      h[key]["payoutPerDup"] = h[key]["fractionPerDup"] * ns.pot_size
+      h[key]["payoutPerDup"] = h[key]["fractionPerDup"] * ns.pot_size * 0.8 # remove bonuses
   return { "totalShares": totalShares, "issueMap": h }
 
 def payout(ns):
   issueSummary = getIssueSummary(ns)
+
   h = issueSummary["issueMap"]
   # Summarise results for each handle
   ws = {}
   for id in h:
+    # if id == "529" or h[id]["leadFinding"] == "529":
+    #   continue
     for w in h[id]["handles"]:
       if not w in ws:
         ws[w] = { "handle": w, "findings": [], "fraction": 0.0 }
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
       isLeadFinding = h[id]["leadFinding"] == w
-      rec = { "id": id, "dups": h[id]["dups"], "fractionPerDup": h[id]["fractionPerDup"], "isLeadFinding": isLeadFinding }
+      rec = { "id": id, "dups": h[id]["dups"], "sharesPerDup": h[id]["sharesPerDup"], "fractionPerDup": h[id]["fractionPerDup"], "isLeadFinding": isLeadFinding, "severity": h[id]["severity"] }
       if ns.pot_size != None:
-        rec["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
+        rec["payoutPerDup"] = h[id]["payoutPerDup"]
       ws[w]["findings"].append(rec)
 
-      factor = 1.0
+      factor = h[id]["percentage"] / 100.0
       if isLeadFinding:
         factor = 1.3 # 30% shares bonus
 
       ws[w]["fraction"] += h[id]["fractionPerDup"] * factor
       if ns.pot_size != None:
         ws[w]["payout"] += h[id]["payoutPerDup"] * factor
+
+  for w in ws:
+      ws[w]["findingsCount"] = len(ws[w]["findings"])
+
   if ns.pot_size != None:
     for w in ws:
-      ws[w]["payout"] = ppUSD(ws[w]["payout"])
+      ws[w]["payout"]
       ws[w]["findings"].sort(key=lambda r: r["id"])
 
+  # bonuses
+  gatherers, gatherersMostFindings = ([], 0)
+  hunters, hunterLeastDupes, hunterBestShares = ([], 200000, 0)
+
+  for w in ws:
+    # gatherer
+    nFindings = len(ws[w]["findings"])
+    if nFindings > gatherersMostFindings:
+      gatherersMostFindings = nFindings
+      gatherers = [w]
+    elif nFindings == gatherersMostFindings:
+      gatherers.append(w)
+
+    # hunter least dupes
+    for f in ws[w]["findings"]:
+      if f["dups"] < hunterLeastDupes:
+        hunterLeastDupes = f["dups"]
+
+  for w in ws:
+    wShares = 0
+    for f in ws[w]["findings"]:
+      if f["dups"] == hunterLeastDupes:
+        wShares += f["sharesPerDup"]
+    if wShares > hunterBestShares:
+      hunterBestShares = wShares
+      hunters = [w]
+    elif wShares == hunterBestShares:
+      hunters.append(w)
+
+  bonus = ns.pot_size * 0.1
+  for hunter in hunters:
+    ws[hunter]["payout"] += bonus / len(hunters)
+    ws[hunter]["hunterBonus"] = bonus / len(hunters)
+
+  for gatherer in gatherers:
+    ws[gatherer]["payout"] += bonus / len(gatherers)
+    ws[gatherer]["gathererBonus"] = bonus / len(gatherers)
+
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
-  wardenSummaries.sort(key=lambda r: -r["fraction"])
+  wardenSummaries.sort(key=lambda r: -r["payout"])
+
+  for i in range(len(wardenSummaries)):
+    wardenSummaries[i]['rank'] = i + 1
 
   rs = { "totalShares": issueSummary["totalShares"], "payouts": wardenSummaries }
   return rs
@@ -201,6 +253,7 @@ elif ns.command == "findings":
   result=findings(ns)
 else:
   parser.parse_args(["--help"])
+
 
 result["note"] = ("This tool only calculates shares for Highs and Mediums and will overestimate " +
                     "a little. It does not take into account QA reports.")
