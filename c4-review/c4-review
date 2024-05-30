@@ -52,6 +52,11 @@ def get_participants_from_gh(repo):
 def get_records_from_gh(ns, repo):
   issues = repo.get_issues(state="all")
   ret = []
+  unsatisfactory_issues = set()
+  for i in issues:
+    if 'unsatisfactory' in [label.name for label in i.labels]:
+      unsatisfactory_issues.add(str(i.number))
+
   # headers = ["reportId", "duplicateOf", "score", "risk", "handle", "title", "issueId", "issueUrl", "gh_Risk", "gh_isOpen", "gh_isDuplicate", "gh_isInvalid"]
   for i in issues:
     duplicateOf = ""
@@ -65,6 +70,8 @@ def get_records_from_gh(ns, repo):
       if l.name.startswith("duplicate-"):
         duplicateOf = l.name.replace("duplicate-", "")
         reportId = duplicateOf
+        if duplicateOf in unsatisfactory_issues:
+          skip = True
       elif l.name == "2 (Med Risk)":
         severity = "M"
       elif l.name == "3 (High Risk)":
