@@ -184,7 +184,7 @@ def payout(ns):
 
   # bonuses
   gatherers, gatherersMostFindings = ([], 0)
-  hunters, hunterLeastDupes, hunterBestShares = ([], 200000, 0)
+  hunters, hunterBestShares = ([], 0)
 
   for w in ws:
     # gatherer
@@ -195,16 +195,10 @@ def payout(ns):
     elif nFindings == gatherersMostFindings:
       gatherers.append(w)
 
-    # hunter least dupes
-    for f in ws[w]["findings"]:
-      if f["dups"] < hunterLeastDupes:
-        hunterLeastDupes = f["dups"]
-
-  for w in ws:
     wShares = 0
     for f in ws[w]["findings"]:
-      if f["dups"] == hunterLeastDupes:
         wShares += f["sharesPerDup"]
+
     if wShares > hunterBestShares:
       hunterBestShares = wShares
       hunters = [w]
