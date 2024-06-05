@@ -76,7 +76,7 @@ def get_records_from_gh(ns, repo):
         severity = "M"
       elif l.name == "3 (High Risk)":
         severity = "H"
-      elif l.name in ['unsatisfactory']:
+      elif l.name in ['unsatisfactory', 'withdrawn by warden']:
         skip = True
 
     if skip or severity is None:
