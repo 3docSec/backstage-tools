@@ -184,7 +184,7 @@ def payout(ns):
 
   # bonuses
   gatherers, gatherersMostFindings = ([], 0)
-  hunters, hunterBestShares = ([], 0)
+  hunters, hunterBestScore = ([], 0)
 
   for w in ws:
     # gatherer
@@ -195,14 +195,19 @@ def payout(ns):
     elif nFindings == gatherersMostFindings:
       gatherers.append(w)
 
-    wShares = 0
+    wScore = 0
     for f in ws[w]["findings"]:
-        wShares += f["sharesPerDup"]
+      if f["dups"] < 5:  # Only count findings with fewer than 5 submissions
+        if f["severity"] == "H":
+          wScore += 10 * (1 / f["dups"])
+        elif f["severity"] == "M":
+          wScore += 3 * (1 / f["dups"])
 
-    if wShares > hunterBestShares:
-      hunterBestShares = wShares
+    ws[w]["hunterScore"] = wScore
+    if wScore > hunterBestScore:
+      hunterBestScore = wScore
       hunters = [w]
-    elif wShares == hunterBestShares:
+    elif wScore == hunterBestScore:
       hunters.append(w)
 
   bonus = ns.pot_size * 0.1
