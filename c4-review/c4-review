@@ -183,26 +183,42 @@ def payout(ns):
       ws[w]["findings"].sort(key=lambda r: r["id"])
 
   # bonuses
-  gatherers, gatherersMostFindings = ([], 0)
-  hunters, hunterBestShares = ([], 0)
+  gatherers, highestGathererScore = ([], 0)
+  hunters, hunterBestScore = ([], 0)
+
+  totalHighRiskFindings = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
+  totalMediumRiskFindings = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
 
   for w in ws:
     # gatherer
-    nFindings = len(ws[w]["findings"])
-    if nFindings > gatherersMostFindings:
-      gatherersMostFindings = nFindings
+    highRiskFindings = sum(f["severity"] == "H" for f in ws[w]["findings"])
+    mediumRiskFindings = sum(f["severity"] == "M" for f in ws[w]["findings"])
+    
+    highScore = 10 * highRiskFindings / totalHighRiskFindings if totalHighRiskFindings else 0
+    mediumScore = 3 * mediumRiskFindings / totalMediumRiskFindings if totalMediumRiskFindings else 0
+    
+    gathererScore = highScore + mediumScore
+    ws[w]["gathererScore"] = gathererScore
+
+    if gathererScore > highestGathererScore:
+      highestGathererScore = gathererScore
       gatherers = [w]
-    elif nFindings == gatherersMostFindings:
+    elif gathererScore == highestGathererScore:
       gatherers.append(w)
 
-    wShares = 0
+    wScore = 0
     for f in ws[w]["findings"]:
-        wShares += f["sharesPerDup"]
+      if f["dups"] < 5:  # Only count findings with fewer than 5 submissions
+        if f["severity"] == "H":
+          wScore += 10 * (1 / f["dups"])
+        elif f["severity"] == "M":
+          wScore += 3 * (1 / f["dups"])
 
-    if wShares > hunterBestShares:
-      hunterBestShares = wShares
+    ws[w]["hunterScore"] = wScore
+    if wScore > hunterBestScore:
+      hunterBestScore = wScore
       hunters = [w]
-    elif wShares == hunterBestShares:
+    elif wScore == hunterBestScore:
       hunters.append(w)
 
   bonus = ns.pot_size * 0.1
