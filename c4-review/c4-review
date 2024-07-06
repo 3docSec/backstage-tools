@@ -200,11 +200,14 @@ def payout(ns):
 
   for w in ws:
     # gatherer
-    highRiskFindings = sum(f["severity"] == "H" for f in ws[w]["findings"])
-    mediumRiskFindings = sum(f["severity"] == "M" for f in ws[w]["findings"])
-    
-    highScore = 10 * highRiskFindings / totalHighRiskFindings if totalHighRiskFindings else 0
-    mediumScore = 3 * mediumRiskFindings / totalMediumRiskFindings if totalMediumRiskFindings else 0
+    highScore = 0
+    mediumScore = 0
+    for f in ws[w]["findings"]:
+        partialWeighting = f["sliceCredit"] if f["sliceCredit"] < 1 else 1
+        if f["severity"] == "H":
+            highScore += 10 * partialWeighting / totalHighRiskFindings
+        elif f["severity"] == "M":
+            mediumScore += 3 * partialWeighting / totalMediumRiskFindings
     
     gathererScore = highScore + mediumScore
     ws[w]["gathererScore"] = gathererScore
@@ -220,10 +223,11 @@ def payout(ns):
     for f in ws[w]["findings"]:
       if f["dups"] < 5:
         # partial dupes only get partial credit towards the TH/TG scoring
+        partialWeighting = f["sliceCredit"] if f["sliceCredit"] < 1 else 1
         if f["severity"] == "H":
-          wScore += 10 / f["dups"] * (f["sliceCredit"] if f["sliceCredit"] < 1 else 1)
+          wScore += 10 / f["dups"] * partialWeighting
         elif f["severity"] == "M":
-          wScore += 3 / f["dups"] * (f["sliceCredit"] if f["sliceCredit"] < 1 else 1)
+          wScore += 3 / f["dups"] * partialWeighting
 
     ws[w]["hunterScore"] = wScore
     if wScore > hunterBestScore:
