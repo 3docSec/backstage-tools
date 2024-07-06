@@ -57,7 +57,6 @@ def get_records_from_gh(ns, repo):
     if 'unsatisfactory' in [label.name for label in i.labels]:
       unsatisfactory_issues.add(str(i.number))
 
-  # headers = ["reportId", "duplicateOf", "score", "risk", "handle", "title", "issueId", "issueUrl", "gh_Risk", "gh_isOpen", "gh_isDuplicate", "gh_isInvalid"]
   for i in issues:
     duplicateOf = ""
     issueId = str(i.number)
@@ -78,6 +77,8 @@ def get_records_from_gh(ns, repo):
         severity = "H"
       elif l.name in ['unsatisfactory', 'withdrawn by warden']:
         skip = True
+      elif l.name.startswith("partial-"):
+        percentage = int(l.name.split("-")[1])
 
     if skip or severity is None:
       continue
@@ -118,32 +119,42 @@ def getIssueSummary(ns):
   h = {}
   for r in rs:
     id=r["reportId"]
-    # if id in disputed_reports:
-    #   continue
     if not id in h:
-      h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "percentage": r["percentage"] }
+      h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "findings": [] }
     if r["duplicateOf"] == "":
       h[id]["leadFinding"] = r["handle"]
       h[id]["githubIssueId"] = r["issueId"]
     if not r["handle"] in h[id]["handles"]:
       h[id]["dups"] += 1
       h[id]["handles"].append(r["handle"])
+      # assumes no warden will get both a full credit and partial credit duplicate of the same finding
+      h[id]["findings"].append({"handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"]})
 
   ## Calculate shares
   totalShares = 0.0
   for key in h:
     baseShares = 10.0 if isHigh(h[key]) else 3.0
     dups = h[key]["dups"]
-    h[key]["sharesForIssue"] = baseShares * BASE**(dups - 1)
-    h[key]["sharesPerDup"] = h[key]["sharesForIssue"] / dups
-    # also include the 30% bonus to the finding selected for report
-    totalShares += h[key]["sharesForIssue"] + h[key]["sharesPerDup"] * 0.3
+    groupShares = baseShares * BASE**(dups - 1)
+
+    totalCredit = 0.0
+    for finding in h[key]["findings"]:
+      if finding["handle"] == h[key]["leadFinding"]:
+        finding["sliceCredit"] = 1.3
+      else:
+        finding["sliceCredit"] = finding["percentage"] / 100.0
+      totalCredit += finding["sliceCredit"]
+
+    for finding in h[key]["findings"]:
+      finding["shares"] = groupShares * (finding["sliceCredit"] / totalCredit)
+      totalShares += finding["shares"]
 
   # A pass to calculate fractions and payouts
   for key in h:
-    h[key]["fractionPerDup"] = h[key]["sharesPerDup"] / totalShares
-    if ns.pot_size != None:
-      h[key]["payoutPerDup"] = h[key]["fractionPerDup"] * ns.pot_size * 0.8 # remove bonuses
+    for finding in h[key]["findings"]:
+      finding["fraction"] = finding["shares"] / totalShares
+      if ns.pot_size != None:
+        finding["payout"] = finding["fraction"] * ns.pot_size * 0.8 # remove bonuses
   return { "totalShares": totalShares, "issueMap": h }
 
 def payout(ns):
@@ -153,34 +164,32 @@ def payout(ns):
   # Summarise results for each handle
   ws = {}
   for id in h:
-    # if id == "529" or h[id]["leadFinding"] == "529":
-    #   continue
-    for w in h[id]["handles"]:
+    for finding in h[id]["findings"]:
+      w = finding["handle"]
       if not w in ws:
-        ws[w] = { "handle": w, "findings": [], "fraction": 0.0 }
+        ws[w] = { "rank": 0, "handle": w }
         if ns.pot_size != None:
-          ws[w]["payout"] = 0.0
+          ws[w]["payout"] = 0
+        ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
       isLeadFinding = h[id]["leadFinding"] == w
-      rec = { "id": id, "dups": h[id]["dups"], "sharesPerDup": h[id]["sharesPerDup"], "fractionPerDup": h[id]["fractionPerDup"], "isLeadFinding": isLeadFinding, "severity": h[id]["severity"] }
-      if ns.pot_size != None:
-        rec["payoutPerDup"] = h[id]["payoutPerDup"]
+      rec = { "findingId": finding["issueId"], "isLeadFinding": isLeadFinding }
+      if not isLeadFinding:
+        rec["leadFindingId"] = h[id]["githubIssueId"]
+      rec.update({
+          "severity": h[id]["severity"],
+          "dups": h[id]["dups"],
+          "sliceCredit": finding["sliceCredit"],
+          "shares": finding["shares"]
+      })
       ws[w]["findings"].append(rec)
-
-      factor = h[id]["percentage"] / 100.0
-      if isLeadFinding:
-        factor = 1.3 # 30% shares bonus
-
-      ws[w]["fraction"] += h[id]["fractionPerDup"] * factor
+      ws[w]["fraction"] += finding["fraction"]
       if ns.pot_size != None:
-        ws[w]["payout"] += h[id]["payoutPerDup"] * factor
+        rec["payout"] = finding["payout"]
+        ws[w]["payout"] += finding["payout"]
 
   for w in ws:
       ws[w]["findingsCount"] = len(ws[w]["findings"])
-
-  if ns.pot_size != None:
-    for w in ws:
-      ws[w]["payout"]
-      ws[w]["findings"].sort(key=lambda r: r["id"])
+      ws[w]["findings"].sort(key=lambda r: -r["shares"])
 
   # bonuses
   gatherers, highestGathererScore = ([], 0)
@@ -206,13 +215,15 @@ def payout(ns):
     elif gathererScore == highestGathererScore:
       gatherers.append(w)
 
+    # hunter
     wScore = 0
     for f in ws[w]["findings"]:
-      if f["dups"] < 5:  # Only count findings with fewer than 5 submissions
+      if f["dups"] < 5:
+        # partial dupes only get partial credit towards the TH/TG scoring
         if f["severity"] == "H":
-          wScore += 10 * (1 / f["dups"])
+          wScore += 10 / f["dups"] * (f["sliceCredit"] if f["sliceCredit"] < 1 else 1)
         elif f["severity"] == "M":
-          wScore += 3 * (1 / f["dups"])
+          wScore += 3 / f["dups"] * (f["sliceCredit"] if f["sliceCredit"] < 1 else 1)
 
     ws[w]["hunterScore"] = wScore
     if wScore > hunterBestScore:
@@ -221,20 +232,32 @@ def payout(ns):
     elif wScore == hunterBestScore:
       hunters.append(w)
 
-  bonus = ns.pot_size * 0.1
-  for hunter in hunters:
-    ws[hunter]["payout"] += bonus / len(hunters)
-    ws[hunter]["hunterBonus"] = bonus / len(hunters)
-
-  for gatherer in gatherers:
-    ws[gatherer]["payout"] += bonus / len(gatherers)
-    ws[gatherer]["gathererBonus"] = bonus / len(gatherers)
+  bonus = 0.1 if ns.pot_size is None else ns.pot_size * 0.1
+  for role, winners in [("hunter", hunters), ("gatherer", gatherers)]:
+    for winner in winners:
+      ws[winner][f"{role}Bonus"] = bonus / len(winners)
+      if ns.pot_size is not None:
+        ws[winner]["payout"] += bonus / len(winners)
 
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
-  wardenSummaries.sort(key=lambda r: -r["payout"])
+  if ns.pot_size is not None:
+    wardenSummaries.sort(key=lambda r: -r["payout"])
+  else: # should be the same
+    wardenSummaries.sort(key=lambda r: -(r.get("fraction", 0) * 0.8 + r.get("hunterBonus", 0) + r.get("gathererBonus", 0)))
 
   for i in range(len(wardenSummaries)):
     wardenSummaries[i]['rank'] = i + 1
+
+    if ns.pot_size != None:
+      # Round payouts
+      wardenSummaries[i]['payout'] = round(wardenSummaries[i]['payout'], 2)
+      if 'hunterBonus' in wardenSummaries[i]:
+        wardenSummaries[i]['hunterBonus'] = round(wardenSummaries[i]['hunterBonus'], 2)
+      if 'gathererBonus' in wardenSummaries[i]:
+        wardenSummaries[i]['gathererBonus'] = round(wardenSummaries[i]['gathererBonus'], 2)
+      
+      for finding in wardenSummaries[i]['findings']:
+        finding['payout'] = round(finding['payout'], 2)
 
   rs = { "totalShares": issueSummary["totalShares"], "payouts": wardenSummaries }
   return rs
