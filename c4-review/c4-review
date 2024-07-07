@@ -44,8 +44,8 @@ def get_participants_from_gh(repo):
 
   for content in t.tree:
     if content.path.endswith(".json"):
-      handle, issueId = content.path.split("/")[-1].replace(".json", "").rsplit("-", 1)
-      handles[issueId] = handle
+      handle, issue_id = content.path.split("/")[-1].replace(".json", "").rsplit("-", 1)
+      handles[issue_id] = handle
 
 def get_records_from_gh(ns, repo):
   issues = repo.get_issues(state="all")
@@ -56,18 +56,18 @@ def get_records_from_gh(ns, repo):
       unsatisfactory_issues.add(str(i.number))
 
   for i in issues:
-    duplicateOf = ""
-    issueId = str(i.number)
-    reportId = issueId
+    duplicate_of = ""
+    issue_id = str(i.number)
+    report_id = issue_id
     severity = None
     skip = False
     percentage = 100
 
     for l in i.labels:
       if l.name.startswith("duplicate-"):
-        duplicateOf = l.name.replace("duplicate-", "")
-        reportId = duplicateOf
-        if duplicateOf in unsatisfactory_issues:
+        duplicate_of = l.name.replace("duplicate-", "")
+        report_id = duplicate_of
+        if duplicate_of in unsatisfactory_issues:
           skip = True
       elif l.name == "2 (Med Risk)":
         severity = "M"
@@ -82,34 +82,34 @@ def get_records_from_gh(ns, repo):
       continue
 
     ret.append({
-      "issueId": issueId,
-      "reportId": reportId,
-      "duplicateOf": duplicateOf,
+      "issueId": issue_id,
+      "reportId": report_id,
+      "duplicateOf": duplicate_of,
       "severity": severity,
-      "handle": handles.get(issueId, "unknown"),
+      "handle": handles.get(issue_id, "unknown"),
       "percentage": percentage
     })
 
   return ret
 
-def ppUSD(n):
+def pp_usd(n):
   return '${:0,.2f}'.format(round(n, 2))
 
-def ppMonth(epochTime):
-  dt = datetime.datetime.fromtimestamp(epochTime)
+def pp_month(epoch_time):
+  dt = datetime.datetime.fromtimestamp(epoch_time)
   return dt.strftime("%B %Y")
 
-def ppTime(epochTime):
-  dt = datetime.datetime.fromtimestamp(epochTime)
+def pp_time(epoch_time):
+  dt = datetime.datetime.fromtimestamp(epoch_time)
   return dt.isoformat()
 
-def isHigh(s):
+def is_high(s):
   return s["severity"] == "H"
 
-def isMedium(s):
+def is_medium(s):
   return s["severity"] == "M"
 
-def getIssueSummary(ns):
+def get_issue_summary(ns):
   repo = g.get_repo(f"code-423n4/{ns.findings_repo}")
   get_participants_from_gh(repo)
   rs = get_records_from_gh(ns, repo)
@@ -129,35 +129,35 @@ def getIssueSummary(ns):
       h[id]["findings"].append({ "handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"] })
 
   ## Calculate shares
-  totalShares = 0.0
+  total_shares = 0.0
   for key in h:
-    baseShares = 10.0 if isHigh(h[key]) else 3.0
+    base_shares = 10.0 if is_high(h[key]) else 3.0
     dups = h[key]["dups"]
-    groupShares = baseShares * BASE**(dups - 1)
+    group_shares = base_shares * BASE**(dups - 1)
 
-    totalCredit = 0.0
+    total_credit = 0.0
     for finding in h[key]["findings"]:
       if finding["handle"] == h[key]["leadFinding"]:
         finding["sliceCredit"] = 1.3
       else:
         finding["sliceCredit"] = finding["percentage"] / 100.0
-      totalCredit += finding["sliceCredit"]
+      total_credit += finding["sliceCredit"]
 
     for finding in h[key]["findings"]:
-      finding["shares"] = groupShares * (finding["sliceCredit"] / totalCredit)
-      totalShares += finding["shares"]
+      finding["shares"] = group_shares * (finding["sliceCredit"] / total_credit)
+      total_shares += finding["shares"]
 
   # A pass to calculate fractions and payouts
   for key in h:
     for finding in h[key]["findings"]:
-      finding["fraction"] = finding["shares"] / totalShares
+      finding["fraction"] = finding["shares"] / total_shares
       if ns.pot_size != None:
         finding["payout"] = finding["fraction"] * ns.pot_size * 0.8 # remove bonuses
-  return { "totalShares": totalShares, "issueMap": h }
+  return { "totalShares": total_shares, "issueMap": h }
 
 def payout(ns):
-  issueSummary = getIssueSummary(ns)
-  h = issueSummary["issueMap"]
+  issue_summary = get_issue_summary(ns)
+  h = issue_summary["issueMap"]
 
   # Summarise results for each handle
   ws = {}
@@ -169,9 +169,9 @@ def payout(ns):
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
         ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
-      isLeadFinding = h[id]["leadFinding"] == w
-      rec = { "findingId": finding["issueId"], "isLeadFinding": isLeadFinding }
-      if not isLeadFinding:
+      is_lead_finding = h[id]["leadFinding"] == w
+      rec = { "findingId": finding["issueId"], "isLeadFinding": is_lead_finding }
+      if not is_lead_finding:
         rec["leadFindingId"] = h[id]["githubIssueId"]
       rec.update({
         "severity": h[id]["severity"],
@@ -190,36 +190,36 @@ def payout(ns):
     ws[w]["findings"].sort(key=lambda r: -r["shares"])
 
   # Calculate bonuses
-  gatherers, highestGathererScore = ([], 0)
-  hunters, highestHunterScore = ([], 0)
+  gatherers, highest_gatherer_score = ([], 0)
+  hunters, highest_hunter_score = ([], 0)
 
-  totalHighRiskFindings = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
-  totalMediumRiskFindings = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
+  total_high_risk_findings = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
+  total_medium_risk_findings = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
 
   for w in ws:
-    gathererScore = 0
-    hunterScore = 0
+    gatherer_score = 0
+    hunter_score = 0
     for f in ws[w]["findings"]:
-      severity_score = 10 if isHigh(f) else 3
-      totalSeverityFindings = totalHighRiskFindings if isHigh(f) else totalMediumRiskFindings
+      severity_score = 10 if is_high(f) else 3
+      total_severity_findings = total_high_risk_findings if is_high(f) else total_medium_risk_findings
       # Partial dupes only get partial credit towards the TH/TG scoring
-      partialWeighting = min(f["sliceCredit"], 1)
-      gathererScore += severity_score / totalSeverityFindings * partialWeighting
+      partial_weighting = min(f["sliceCredit"], 1)
+      gatherer_score += severity_score / total_severity_findings * partial_weighting
       if f["dups"] < 5:
-        hunterScore += severity_score / f["dups"] * partialWeighting
+        hunter_score += severity_score / f["dups"] * partial_weighting
 
-    ws[w]["gathererScore"] = gathererScore
-    if gathererScore > highestGathererScore:
-      highestGathererScore = gathererScore
+    ws[w]["gathererScore"] = gatherer_score
+    if gatherer_score > highest_gatherer_score:
+      highest_gatherer_score = gatherer_score
       gatherers = [w]
-    elif gathererScore == highestGathererScore:
+    elif gatherer_score == highest_gatherer_score:
       gatherers.append(w)
 
-    ws[w]["hunterScore"] = hunterScore
-    if hunterScore > highestHunterScore:
-      highestHunterScore = hunterScore
+    ws[w]["hunterScore"] = hunter_score
+    if hunter_score > highest_hunter_score:
+      highest_hunter_score = hunter_score
       hunters = [w]
-    elif hunterScore == highestHunterScore:
+    elif hunter_score == highest_hunter_score:
       hunters.append(w)
 
   bonus = ns.pot_size * 0.1 if ns.pot_size != None else 0.1
@@ -230,30 +230,30 @@ def payout(ns):
         ws[winner]["payout"] += bonus / len(winners)
 
   # Prepare and format warden summaries for output
-  wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
+  warden_summaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
   if ns.pot_size != None:
-    wardenSummaries.sort(key=lambda r: -r["payout"])
+    warden_summaries.sort(key=lambda r: -r["payout"])
   else: # should be the same
-    wardenSummaries.sort(key=lambda r: -(r["fraction"] * 0.8 + r.get("hunterBonus", 0) + r.get("gathererBonus", 0)))
+    warden_summaries.sort(key=lambda r: -(r["fraction"] * 0.8 + r.get("hunterBonus", 0) + r.get("gathererBonus", 0)))
 
-  for i in range(len(wardenSummaries)):
-    wardenSummaries[i]['rank'] = i + 1
+  for i in range(len(warden_summaries)):
+    warden_summaries[i]['rank'] = i + 1
     if ns.pot_size != None:
-      wardenSummaries[i]['payout'] = round(wardenSummaries[i]['payout'], 2)
-      for finding in wardenSummaries[i]['findings']:
+      warden_summaries[i]['payout'] = round(warden_summaries[i]['payout'], 2)
+      for finding in warden_summaries[i]['findings']:
         finding['payout'] = round(finding['payout'], 2)
 
-  return { "totalShares": issueSummary["totalShares"], "payouts": wardenSummaries }
+  return { "totalShares": issue_summary["totalShares"], "payouts": warden_summaries }
 
 def findings(ns):
-  issueSummary = getIssueSummary(ns)
-  h = issueSummary["issueMap"]
+  issue_summary = get_issue_summary(ns)
+  h = issue_summary["issueMap"]
   for id in h:
     if "payoutPerDup" in h[id]:
-      h[id]["payoutPerDup"] = ppUSD(h[id]["payoutPerDup"])
+      h[id]["payoutPerDup"] = pp_usd(h[id]["payoutPerDup"])
   rs = [h[k] for k in h]
   rs.sort(key=lambda r: r["id"])
-  return { "totalShares": issueSummary["totalShares"], "findings": rs }
+  return { "totalShares": issue_summary["totalShares"], "findings": rs }
 
 ns = parser.parse_args(sys.argv[1:])
 
