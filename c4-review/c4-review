@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawT
                                   description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
 subp = parser.add_subparsers(dest="command") # dest="command" means that we see which command was parsed
 
-base_help = f"Change base (default {BASE}) for Sybil protection e.g. --base=0.9 (for old comps)"
+base_help = f"Change base (default {BASE}) for Sybil protection"
 
 payout = subp.add_parser("payouts", description="Find out the fraction of total pot or payouts")
 payout.add_argument('findings_repo', type=str)
@@ -193,47 +193,36 @@ def payout(ns):
 
   # bonuses
   gatherers, highestGathererScore = ([], 0)
-  hunters, hunterBestScore = ([], 0)
+  hunters, highestHunterScore = ([], 0)
 
   totalHighRiskFindings = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
   totalMediumRiskFindings = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
 
   for w in ws:
-    # gatherer
-    highScore = 0
-    mediumScore = 0
+    gathererScore = 0
+    hunterScore = 0
     for f in ws[w]["findings"]:
-        partialWeighting = f["sliceCredit"] if f["sliceCredit"] < 1 else 1
-        if f["severity"] == "H":
-            highScore += 10 * partialWeighting / totalHighRiskFindings
-        elif f["severity"] == "M":
-            mediumScore += 3 * partialWeighting / totalMediumRiskFindings
-    
-    gathererScore = highScore + mediumScore
-    ws[w]["gathererScore"] = gathererScore
+      isHigh = f["severity"] == "H"
+      severity_score = 10 if isHigh else 3
+      totalSeverityFindings = totalHighRiskFindings if isHigh else totalMediumRiskFindings
+      # partial dupes only get partial credit towards the TH/TG scoring
+      partialWeighting = min(f["sliceCredit"], 1)
+      gathererScore += severity_score / totalSeverityFindings * partialWeighting
+      if f["dups"] < 5:
+        hunterScore += severity_score / f["dups"] * partialWeighting
 
+    ws[w]["gathererScore"] = gathererScore
     if gathererScore > highestGathererScore:
       highestGathererScore = gathererScore
       gatherers = [w]
     elif gathererScore == highestGathererScore:
       gatherers.append(w)
 
-    # hunter
-    wScore = 0
-    for f in ws[w]["findings"]:
-      if f["dups"] < 5:
-        # partial dupes only get partial credit towards the TH/TG scoring
-        partialWeighting = f["sliceCredit"] if f["sliceCredit"] < 1 else 1
-        if f["severity"] == "H":
-          wScore += 10 / f["dups"] * partialWeighting
-        elif f["severity"] == "M":
-          wScore += 3 / f["dups"] * partialWeighting
-
-    ws[w]["hunterScore"] = wScore
-    if wScore > hunterBestScore:
-      hunterBestScore = wScore
+    ws[w]["hunterScore"] = hunterScore
+    if hunterScore > highestHunterScore:
+      highestHunterScore = hunterScore
       hunters = [w]
-    elif wScore == hunterBestScore:
+    elif hunterScore == highestHunterScore:
       hunters.append(w)
 
   bonus = 0.1 if ns.pot_size is None else ns.pot_size * 0.1
@@ -299,8 +288,8 @@ else:
   parser.parse_args(["--help"])
 
 
-result["note"] = ("This tool only calculates shares for Highs and Mediums and will overestimate " +
-                    "a little. It does not take into account QA reports.")
+result["note"] = ("This tool only calculates shares for Highs and Mediums. " +
+                    "It does not take into account QA reports.")
 
 ## Prints the records as valid JSON
 print(json.dumps(result, indent=2))
