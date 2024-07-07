@@ -114,46 +114,46 @@ def get_issue_summary(ns):
   get_participants_from_gh(repo)
   rs = get_records_from_gh(ns, repo)
 
-  h = {}
+  dup_sets = {}
   for r in rs:
     id = r["reportId"]
-    if not id in h:
-      h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "findings": [] }
+    if not id in dup_sets:
+      dup_sets[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "findings": [] }
     if r["duplicateOf"] == "":
-      h[id]["leadFinding"] = r["handle"]
-      h[id]["githubIssueId"] = r["issueId"]
-    if not r["handle"] in h[id]["handles"]:
-      h[id]["dups"] += 1
-      h[id]["handles"].append(r["handle"])
+      dup_sets[id]["leadFinding"] = r["handle"]
+      dup_sets[id]["githubIssueId"] = r["issueId"]
+    if not r["handle"] in dup_sets[id]["handles"]:
+      dup_sets[id]["dups"] += 1
+      dup_sets[id]["handles"].append(r["handle"])
       # Assumes no warden will get multiple duplicates of the same finding with different partial credit
-      h[id]["findings"].append({ "handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"] })
+      dup_sets[id]["findings"].append({ "handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"] })
 
   ## Calculate shares
   total_shares = 0.0
-  for key in h:
-    base_shares = 10.0 if is_high(h[key]) else 3.0
-    dups = h[key]["dups"]
-    group_shares = base_shares * BASE**(dups - 1)
+  for id in dup_sets:
+    base_shares = 10 if is_high(dup_sets[id]) else 3
+    group_shares = base_shares * BASE**(dup_sets[id]["dups"] - 1)
 
     total_credit = 0.0
-    for finding in h[key]["findings"]:
-      if finding["handle"] == h[key]["leadFinding"]:
+    for finding in dup_sets[id]["findings"]:
+      if finding["handle"] == dup_sets[id]["leadFinding"]:
         finding["sliceCredit"] = 1.3
       else:
         finding["sliceCredit"] = finding["percentage"] / 100.0
       total_credit += finding["sliceCredit"]
 
-    for finding in h[key]["findings"]:
+    for finding in dup_sets[id]["findings"]:
       finding["shares"] = group_shares * (finding["sliceCredit"] / total_credit)
       total_shares += finding["shares"]
 
   # A pass to calculate fractions and payouts
-  for key in h:
-    for finding in h[key]["findings"]:
+  for id in dup_sets:
+    for finding in dup_sets[id]["findings"]:
       finding["fraction"] = finding["shares"] / total_shares
       if ns.pot_size != None:
         finding["payout"] = finding["fraction"] * ns.pot_size * 0.8 # remove bonuses
-  return { "totalShares": total_shares, "issueMap": h }
+
+  return { "totalShares": total_shares, "issueMap": dup_sets }
 
 def payout(ns):
   issue_summary = get_issue_summary(ns)
@@ -169,6 +169,7 @@ def payout(ns):
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
         ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
+
       is_lead_finding = h[id]["leadFinding"] == w
       rec = { "findingId": finding["issueId"], "isLeadFinding": is_lead_finding }
       if not is_lead_finding:
@@ -180,6 +181,7 @@ def payout(ns):
         "shares": finding["shares"]
       })
       ws[w]["findings"].append(rec)
+
       ws[w]["fraction"] += finding["fraction"]
       if ns.pot_size != None:
         rec["payout"] = finding["payout"]
