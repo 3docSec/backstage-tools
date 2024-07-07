@@ -36,8 +36,6 @@ findings.add_argument('findings_repo', type=str)
 findings.add_argument('pot_size', type=int, nargs='?')
 findings.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
-#
-# Functions
 
 def get_participants_from_gh(repo):
   # build issue-to-handle map
@@ -127,7 +125,7 @@ def getIssueSummary(ns):
     if not r["handle"] in h[id]["handles"]:
       h[id]["dups"] += 1
       h[id]["handles"].append(r["handle"])
-      # assumes no warden will get multiple duplicates of the same finding with different partial credit
+      # Assumes no warden will get multiple duplicates of the same finding with different partial credit
       h[id]["findings"].append({ "handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"] })
 
   ## Calculate shares
@@ -159,8 +157,8 @@ def getIssueSummary(ns):
 
 def payout(ns):
   issueSummary = getIssueSummary(ns)
-
   h = issueSummary["issueMap"]
+
   # Summarise results for each handle
   ws = {}
   for id in h:
@@ -191,7 +189,7 @@ def payout(ns):
     ws[w]["findingsCount"] = len(ws[w]["findings"])
     ws[w]["findings"].sort(key=lambda r: -r["shares"])
 
-  # bonuses
+  # Calculate bonuses
   gatherers, highestGathererScore = ([], 0)
   hunters, highestHunterScore = ([], 0)
 
@@ -204,7 +202,7 @@ def payout(ns):
     for f in ws[w]["findings"]:
       severity_score = 10 if isHigh(f) else 3
       totalSeverityFindings = totalHighRiskFindings if isHigh(f) else totalMediumRiskFindings
-      # partial dupes only get partial credit towards the TH/TG scoring
+      # Partial dupes only get partial credit towards the TH/TG scoring
       partialWeighting = min(f["sliceCredit"], 1)
       gathererScore += severity_score / totalSeverityFindings * partialWeighting
       if f["dups"] < 5:
@@ -227,10 +225,11 @@ def payout(ns):
   bonus = ns.pot_size * 0.1 if ns.pot_size != None else 0.1
   for role, winners in [("hunter", hunters), ("gatherer", gatherers)]:
     for winner in winners:
-      ws[winner][f"{role}Bonus"] = bonus / len(winners)
+      ws[winner][f"{role}Bonus"] = round(bonus / len(winners), 2)
       if ns.pot_size != None:
         ws[winner]["payout"] += bonus / len(winners)
 
+  # Prepare and format warden summaries for output
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
   if ns.pot_size != None:
     wardenSummaries.sort(key=lambda r: -r["payout"])
@@ -239,20 +238,12 @@ def payout(ns):
 
   for i in range(len(wardenSummaries)):
     wardenSummaries[i]['rank'] = i + 1
-
     if ns.pot_size != None:
-      # Round payouts
       wardenSummaries[i]['payout'] = round(wardenSummaries[i]['payout'], 2)
-      if 'hunterBonus' in wardenSummaries[i]:
-        wardenSummaries[i]['hunterBonus'] = round(wardenSummaries[i]['hunterBonus'], 2)
-      if 'gathererBonus' in wardenSummaries[i]:
-        wardenSummaries[i]['gathererBonus'] = round(wardenSummaries[i]['gathererBonus'], 2)
-      
       for finding in wardenSummaries[i]['findings']:
         finding['payout'] = round(finding['payout'], 2)
 
-  rs = { "totalShares": issueSummary["totalShares"], "payouts": wardenSummaries }
-  return rs
+  return { "totalShares": issueSummary["totalShares"], "payouts": wardenSummaries }
 
 def findings(ns):
   issueSummary = getIssueSummary(ns)
