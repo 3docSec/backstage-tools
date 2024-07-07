@@ -192,16 +192,15 @@ def payout(ns):
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
   hunters, highest_hunter_score = ([], 0)
-
-  total_high_risk_findings = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
-  total_medium_risk_findings = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
+  num_highs = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
+  num_mediums = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
 
   for w in ws:
     gatherer_score = 0
     hunter_score = 0
     for f in ws[w]["findings"]:
       severity_score = 10 if is_high(f) else 3
-      total_severity_findings = total_high_risk_findings if is_high(f) else total_medium_risk_findings
+      total_severity_findings = num_highs if is_high(f) else num_mediums
       # Partial dupes only get partial credit towards the TH/TG scoring
       partial_weighting = min(f["sliceCredit"], 1)
       gatherer_score += severity_score / total_severity_findings * partial_weighting
