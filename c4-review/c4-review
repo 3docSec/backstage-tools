@@ -202,9 +202,8 @@ def payout(ns):
     gathererScore = 0
     hunterScore = 0
     for f in ws[w]["findings"]:
-      isHigh = f["severity"] == "H"
-      severity_score = 10 if isHigh else 3
-      totalSeverityFindings = totalHighRiskFindings if isHigh else totalMediumRiskFindings
+      severity_score = 10 if isHigh(f) else 3
+      totalSeverityFindings = totalHighRiskFindings if isHigh(f) else totalMediumRiskFindings
       # partial dupes only get partial credit towards the TH/TG scoring
       partialWeighting = min(f["sliceCredit"], 1)
       gathererScore += severity_score / totalSeverityFindings * partialWeighting
