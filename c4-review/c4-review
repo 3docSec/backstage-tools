@@ -192,8 +192,8 @@ def payout(ns):
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
   hunters, highest_hunter_score = ([], 0)
-  num_highs = sum(f["severity"] == "H" for w in ws for f in ws[w]["findings"])
-  num_mediums = sum(f["severity"] == "M" for w in ws for f in ws[w]["findings"])
+  num_highs = sum(h[id]["severity"] == "H" for id in h)
+  num_mediums = sum(h[id]["severity"] == "M" for id in h)
 
   for w in ws:
     gatherer_score = 0
@@ -201,7 +201,10 @@ def payout(ns):
     for f in ws[w]["findings"]:
       severity_score = 10 if is_high(f) else 3
       total_severity_findings = num_highs if is_high(f) else num_mediums
-      # Partial dupes only get partial credit towards the TH/TG scoring
+      # Partial dupes either only get partial credit towards the TH/TG scoring
+      # (see https://discord.com/channels/810916927919620096/976603323450941440/1257966110376984658)
+      # or none (https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
+      # Going with the first here
       partial_weighting = min(f["sliceCredit"], 1)
       gatherer_score += severity_score / total_severity_findings * partial_weighting
       if f["dups"] < 5:
