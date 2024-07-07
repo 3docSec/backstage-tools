@@ -20,7 +20,7 @@ disputed_reports = set()
 BASE = 0.6 # Base for Sybil protection. Was once 0.9 but 0.6 since Oct 2022
 
 parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawTextHelpFormatter,
-                                  description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
+                                 description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
 subp = parser.add_subparsers(dest="command") # dest="command" means that we see which command was parsed
 
 base_help = f"Change base (default {BASE}) for Sybil protection"
@@ -29,12 +29,12 @@ payout = subp.add_parser("payouts", description="Find out the fraction of total 
 payout.add_argument('findings_repo', type=str)
 payout.add_argument('pot_size', type=int, nargs='?')
 payout.add_argument('-w', '--handle', type=str, nargs='?')
-payout.add_argument('-b', '--base', type=str,nargs=1, help=base_help)
+payout.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
 findings = subp.add_parser("findings", description="Summary of findings, including duplicate counts")
 findings.add_argument('findings_repo', type=str)
 findings.add_argument('pot_size', type=int, nargs='?')
-findings.add_argument('-b', '--base', type=str,nargs=1, help=base_help)
+findings.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
 #
 # Functions
@@ -103,7 +103,7 @@ def ppMonth(epochTime):
 
 def ppTime(epochTime):
   dt = datetime.datetime.fromtimestamp(epochTime)
-  return dt.isoformat();
+  return dt.isoformat()
 
 def isHigh(s):
   return s["severity"] == "H"
@@ -118,7 +118,7 @@ def getIssueSummary(ns):
 
   h = {}
   for r in rs:
-    id=r["reportId"]
+    id = r["reportId"]
     if not id in h:
       h[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "findings": [] }
     if r["duplicateOf"] == "":
@@ -127,8 +127,8 @@ def getIssueSummary(ns):
     if not r["handle"] in h[id]["handles"]:
       h[id]["dups"] += 1
       h[id]["handles"].append(r["handle"])
-      # assumes no warden will get both a full credit and partial credit duplicate of the same finding
-      h[id]["findings"].append({"handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"]})
+      # assumes no warden will get multiple duplicates of the same finding with different partial credit
+      h[id]["findings"].append({ "handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"] })
 
   ## Calculate shares
   totalShares = 0.0
@@ -169,17 +169,17 @@ def payout(ns):
       if not w in ws:
         ws[w] = { "rank": 0, "handle": w }
         if ns.pot_size != None:
-          ws[w]["payout"] = 0
+          ws[w]["payout"] = 0.0
         ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
       isLeadFinding = h[id]["leadFinding"] == w
       rec = { "findingId": finding["issueId"], "isLeadFinding": isLeadFinding }
       if not isLeadFinding:
         rec["leadFindingId"] = h[id]["githubIssueId"]
       rec.update({
-          "severity": h[id]["severity"],
-          "dups": h[id]["dups"],
-          "sliceCredit": finding["sliceCredit"],
-          "shares": finding["shares"]
+        "severity": h[id]["severity"],
+        "dups": h[id]["dups"],
+        "sliceCredit": finding["sliceCredit"],
+        "shares": finding["shares"]
       })
       ws[w]["findings"].append(rec)
       ws[w]["fraction"] += finding["fraction"]
@@ -188,8 +188,8 @@ def payout(ns):
         ws[w]["payout"] += finding["payout"]
 
   for w in ws:
-      ws[w]["findingsCount"] = len(ws[w]["findings"])
-      ws[w]["findings"].sort(key=lambda r: -r["shares"])
+    ws[w]["findingsCount"] = len(ws[w]["findings"])
+    ws[w]["findings"].sort(key=lambda r: -r["shares"])
 
   # bonuses
   gatherers, highestGathererScore = ([], 0)
@@ -224,18 +224,18 @@ def payout(ns):
     elif hunterScore == highestHunterScore:
       hunters.append(w)
 
-  bonus = 0.1 if ns.pot_size is None else ns.pot_size * 0.1
+  bonus = ns.pot_size * 0.1 if ns.pot_size != None else 0.1
   for role, winners in [("hunter", hunters), ("gatherer", gatherers)]:
     for winner in winners:
       ws[winner][f"{role}Bonus"] = bonus / len(winners)
-      if ns.pot_size is not None:
+      if ns.pot_size != None:
         ws[winner]["payout"] += bonus / len(winners)
 
   wardenSummaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
-  if ns.pot_size is not None:
+  if ns.pot_size != None:
     wardenSummaries.sort(key=lambda r: -r["payout"])
   else: # should be the same
-    wardenSummaries.sort(key=lambda r: -(r.get("fraction", 0) * 0.8 + r.get("hunterBonus", 0) + r.get("gathererBonus", 0)))
+    wardenSummaries.sort(key=lambda r: -(r["fraction"] * 0.8 + r.get("hunterBonus", 0) + r.get("gathererBonus", 0)))
 
   for i in range(len(wardenSummaries)):
     wardenSummaries[i]['rank'] = i + 1
@@ -275,20 +275,19 @@ def set_base(base):
   if base != None:
     BASE = float(base[0])
   else:
-    BASE=0.9
+    BASE = 0.9
 
 set_base(ns.base)
 
 if ns.command == "payouts":
-  result=payout(ns)
+  result = payout(ns)
 elif ns.command == "findings":
-  result=findings(ns)
+  result = findings(ns)
 else:
   parser.parse_args(["--help"])
 
-
 result["note"] = ("This tool only calculates shares for Highs and Mediums. " +
-                    "It does not take into account QA reports.")
+                  "It does not take into account QA reports.")
 
 ## Prints the records as valid JSON
 print(json.dumps(result, indent=2))
