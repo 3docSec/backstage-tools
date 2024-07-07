@@ -78,7 +78,7 @@ def get_records_from_gh(ns, repo):
       elif l.name.startswith("partial-"):
         percentage = int(l.name.split("-")[1])
 
-    if skip or severity is None:
+    if skip or (severity is None and duplicate_of == ""):
       continue
 
     ret.append({
@@ -118,8 +118,9 @@ def get_issue_summary(ns):
   for r in rs:
     id = r["reportId"]
     if not id in dup_sets:
-      dup_sets[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "severity": r["severity"], "findings": [] }
+      dup_sets[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "findings": [] }
     if r["duplicateOf"] == "":
+      dup_sets[id]["severity"] = r["severity"]
       dup_sets[id]["leadFinding"] = r["handle"]
       dup_sets[id]["githubIssueId"] = r["issueId"]
     if not r["handle"] in dup_sets[id]["handles"]:
