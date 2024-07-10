@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawT
                                  description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
 subp = parser.add_subparsers(dest="command") # dest="command" means that we see which command was parsed
 
-base_help = f"Change base (default {BASE}) for Sybil protection"
+base_help = f"Change base (default {BASE}) for Sybil protection e.g. --base=0.9 (for old comps)"
 
 payout = subp.add_parser("payouts", description="Find out the fraction of total pot or payouts")
 payout.add_argument('findings_repo', type=str)
