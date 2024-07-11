@@ -17,7 +17,7 @@ g = Github(auth=Auth.Token(gh_token))
 handles = {}
 disputed_reports = set()
 
-BASE = 0.6 # Base for Sybil protection. Was once 0.9 but 0.6 since Oct 2022
+BASE = 0.85 # Base for Sybil protection. Was once 0.9 but 0.85 since Jul 2024
 
 parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawTextHelpFormatter,
                                   description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
@@ -260,7 +260,7 @@ def set_base(base):
   if base != None:
     BASE = float(base[0])
   else:
-    BASE=0.9
+    BASE=0.85
 
 set_base(ns.base)
 
