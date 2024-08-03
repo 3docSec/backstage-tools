@@ -173,15 +173,14 @@ def payout(ns):
         ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
 
       is_lead_finding = h[id]["leadFinding"] == w
-      rec = { "findingId": finding["issueId"], "isLeadFinding": is_lead_finding }
-      if not is_lead_finding:
-        rec["leadFindingId"] = h[id]["githubIssueId"]
-      rec.update({
+      rec = { "findingId": finding["issueId"],
+        "isLeadFinding": is_lead_finding,
+        "leadFindingId" : h[id]["githubIssueId"],
         "severity": h[id]["severity"],
         "dups": h[id]["dups"],
         "sliceCredit": finding["sliceCredit"],
         "shares": finding["shares"]
-      })
+      }
       ws[w]["findings"].append(rec)
 
       ws[w]["fraction"] += finding["fraction"]
