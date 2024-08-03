@@ -132,8 +132,9 @@ def get_issue_summary(ns):
   ## Calculate shares
   total_shares = 0.0
   for id in dup_sets:
+    num_dups = dup_sets[id]["dups"]
     base_shares = 10 if is_high(dup_sets[id]) else 3
-    group_shares = base_shares * BASE**(dup_sets[id]["dups"] - 1)
+    group_shares = base_shares * BASE**(num_dups - 1) * (num_dups + 0.3) / num_dups # including 30% selected for report bonus
 
     total_credit = 0.0
     for finding in dup_sets[id]["findings"]:
