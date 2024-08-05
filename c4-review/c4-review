@@ -73,7 +73,8 @@ def get_records_from_gh(ns, repo):
         severity = "M"
       elif l.name == "3 (High Risk)":
         severity = "H"
-      elif l.name in ['unsatisfactory', 'withdrawn by warden', 'nullified', 'ineligible for award']:
+      elif l.name in ['unsatisfactory', 'withdrawn by warden', 'withdrawn by judge',
+                      'nullified', 'ineligible for award']:
         skip = True
       elif l.name.startswith("partial-"):
         percentage = int(l.name.split("-")[1])
