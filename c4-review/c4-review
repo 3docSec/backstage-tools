@@ -211,7 +211,7 @@ def payout(ns):
       # Going with the first here
       partial_weighting = min(f["sliceCredit"], 1)
       gatherer_score += severity_score / total_severity_findings * partial_weighting
-      if f["dups"] < 5:
+      if f["dups"] <= 5:
         hunter_score += severity_score / f["dups"] * partial_weighting
 
     ws[w]["gathererScore"] = gatherer_score
