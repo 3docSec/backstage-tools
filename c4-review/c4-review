@@ -7,6 +7,7 @@ import datetime
 import os.path
 from github import Github
 from github import Auth
+import webbrowser
 
 gh_token = os.getenv("GITHUB_ACCESS_TOKEN")
 if not gh_token:
@@ -28,6 +29,7 @@ base_help = f"Change base (default {BASE}) for Sybil protection e.g. --base=0.9 
 payout = subp.add_parser("payouts", description="Find out the fraction of total pot or payouts")
 payout.add_argument('findings_repo', type=str)
 payout.add_argument('pot_size', type=int, nargs='?')
+payout.add_argument('-d', '--ignore_disputed', type=bool)
 payout.add_argument('-w', '--handle', type=str, nargs='?')
 payout.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
@@ -36,8 +38,13 @@ findings.add_argument('findings_repo', type=str)
 findings.add_argument('pot_size', type=int, nargs='?')
 findings.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
+open = subp.add_parser("open", description="Opens all findings from a given warden in browser")
+open.add_argument('findings_repo', type=str)
+open.add_argument('handle', type=str)
 
-def get_participants_from_gh(repo):
+def get_participants_from_gh(ns):
+  repo = get_repo(ns)
+
   # build issue-to-handle map
   b = repo.get_branch(repo.default_branch)
   t = repo.get_git_tree(b.commit.sha, recursive=True)
@@ -47,7 +54,8 @@ def get_participants_from_gh(repo):
       handle, issue_id = content.path.split("/")[-1].replace(".json", "").rsplit("-", 1)
       handles[issue_id] = handle
 
-def get_records_from_gh(ns, repo):
+def get_records_from_gh(ns):
+  repo = get_repo(ns)
   issues = repo.get_issues(state="all")
   ret = []
   unsatisfactory_issues = set()
@@ -78,6 +86,8 @@ def get_records_from_gh(ns, repo):
         skip = True
       elif l.name.startswith("partial-"):
         percentage = int(l.name.split("-")[1])
+      elif l.name == "sponsor disputed":
+        disputed_reports.add(issue_id)
 
     if skip or severity is None:
       continue
@@ -110,14 +120,18 @@ def is_high(s):
 def is_medium(s):
   return s["severity"] == "M"
 
+def get_repo(ns):
+  return g.get_repo(f"code-423n4/{ns.findings_repo}")
+
 def get_issue_summary(ns):
-  repo = g.get_repo(f"code-423n4/{ns.findings_repo}")
-  get_participants_from_gh(repo)
-  rs = get_records_from_gh(ns, repo)
+  get_participants_from_gh(ns)
+  rs = get_records_from_gh(ns)
 
   dup_sets = {}
   for r in rs:
     id = r["reportId"]
+    if id in disputed_reports and ns.ignore_disputed == True:
+      continue
     if not id in dup_sets:
       dup_sets[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "findings": [] }
     if r["duplicateOf"] == "":
@@ -251,6 +265,15 @@ def payout(ns):
 
   return { "totalShares": issue_summary["totalShares"], "payouts": warden_summaries }
 
+def open(ns):
+  get_participants_from_gh(ns)
+
+  repo = get_repo(ns)
+
+  for i, handle in handles.items():
+    if handle == ns.handle:
+      webbrowser.open(f"{repo.html_url}/issues/{i}", new=1, autoraise=True)
+
 def findings(ns):
   issue_summary = get_issue_summary(ns)
   h = issue_summary["issueMap"]
@@ -274,12 +297,15 @@ def set_base(base):
   else:
     BASE = 0.85
 
-set_base(ns.base)
-
 if ns.command == "payouts":
+  set_base(ns.base)
   result = payout(ns)
 elif ns.command == "findings":
+  set_base(ns.base)
   result = findings(ns)
+elif ns.command == "open":
+  open(ns)
+  result = {}
 else:
   parser.parse_args(["--help"])
 

@@ -41,12 +41,12 @@ $ ./c4-review --help
 ```
 
 ```
-usage: c4-review [-h] {payouts,findings} ...
+usage: c4-review [-h] {payouts,findings,open} ...
 
 Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle
 
 positional arguments:
-  {payouts,findings}
+  {payouts,findings,open}
 
 options:
   -h, --help          show this help message and exit
@@ -88,6 +88,15 @@ options:
   -h, --help            show this help message and exit
   -w [HANDLE], --handle [HANDLE]
 ```
+
+### `open` command
+
+```
+$ ./c4-review open --help
+```
+usage: c4-review open [-h] findings_repo handle
+
+Opens in a browser tab all findings reported by a given warden
 
 ## Findings summary
 Note: the below examples use data taken from an actual contest - [Amphora protocol](https://code4rena.com/contests/2023-07-amphora-protocol))
