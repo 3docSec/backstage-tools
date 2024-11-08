@@ -181,34 +181,34 @@ def get_issue_summary(ns):
 
 def payout(ns):
   issue_summary = get_issue_summary(ns)
-  h = issue_summary["issueMap"]
+  dup_sets = issue_summary["issueMap"]
 
   # Summarise results for each handle
   ws = {}
-  for id in h:
-    for finding in h[id]["findings"]:
-      w = finding["handle"]
+  for id in dup_sets:
+    for dup in dup_sets[id]["findings"]:
+      w = dup["handle"]
       if not w in ws:
         ws[w] = { "rank": 0, "handle": w }
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
         ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
 
-      is_lead_finding = h[id]["leadFinding"] == w
-      rec = { "findingId": finding["issueId"],
+      is_lead_finding = dup_sets[id]["leadFinding"] == w
+      rec = { "findingId": dup["issueId"],
         "isLeadFinding": is_lead_finding,
-        "leadFindingId" : h[id]["githubIssueId"],
-        "severity": h[id]["severity"],
-        "dups": h[id]["dups"],
-        "sliceCredit": finding["sliceCredit"],
-        "shares": finding["shares"]
+        "leadFindingId" : dup_sets[id]["githubIssueId"],
+        "severity": dup_sets[id]["severity"],
+        "dups": dup_sets[id]["dups"],
+        "sliceCredit": dup["sliceCredit"],
+        "shares": dup["shares"]
       }
       ws[w]["findings"].append(rec)
 
-      ws[w]["fraction"] += finding["fraction"]
+      ws[w]["fraction"] += dup["fraction"]
       if ns.pot_size != None:
-        rec["payout"] = finding["payout"]
-        ws[w]["payout"] += finding["payout"]
+        rec["payout"] = dup["payout"]
+        ws[w]["payout"] += dup["payout"]
 
   for w in ws:
     ws[w]["findingsCount"] = len(ws[w]["findings"])
@@ -217,8 +217,8 @@ def payout(ns):
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
   hunters, highest_hunter_score = ([], 0)
-  num_highs = sum(h[id]["severity"] == "H" for id in h)
-  num_mediums = sum(h[id]["severity"] == "M" for id in h)
+  num_highs = sum(dup_sets[id]["severity"] == "H" for id in dup_sets)
+  num_mediums = sum(dup_sets[id]["severity"] == "M" for id in dup_sets)
 
   for w in ws:
     gatherer_score = 0
