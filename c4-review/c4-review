@@ -40,14 +40,24 @@ open.add_argument('contest_slug', type=str)
 open.add_argument('handle', type=str)
 
 def get_findings(ns):
-  url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/findings?perPage=100&page=1"
   headers = {
     "content-type": "application/json",
     "cookie": f"C4AUTH-LOGIN={os.getenv('C4AUTH_LOGIN')}"
   }
-  response = requests.get(url, headers=headers).json()
 
-  return response['data']
+  findings = []
+
+  page = 1
+  last_page = 1
+
+  while page <= last_page:
+    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/findings?perPage=100&page={page}"
+    response = requests.get(url, headers=headers).json()
+    findings.extend(response['data'])
+    last_page = response['pagination']['lastPage']
+    page += 1
+
+  return findings
 
 def pp_usd(n):
   return '${:0,.2f}'.format(round(n, 2))
@@ -124,7 +134,7 @@ def payout(ns):
 
     for idx, submission in enumerate(finding["submissions"]['data']):
       quality = get_quality(submission)
-      if validity != "valid" or quality != "sufficient":
+      if quality != "sufficient":
         continue
     
       if idx == 0:
