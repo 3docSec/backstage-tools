@@ -157,7 +157,7 @@ def payout(ns):
         "submissionId" : "S-" + str(submission["number"]),
         "findingId": "F-" + str(finding["number"]),
         "isLeadSubmission": idx == 0,
-        "severity": finding["submissions"]["data"][0]["severity"],
+        "severity": finding["severity"],
         "dups": finding["dups"],
         "sliceCredit": submission["sliceCredit"],
         "shares": submission["shares"]
