@@ -87,7 +87,7 @@ def get_validity_and_severity(finding):
   severity = finding["submissions"]["data"][0]["severity"]
 
   for evaluation in finding["evaluations"]:
-    if evaluation["type"] == "validity":
+    if evaluation["type"] == "validity" and evaluation["userAuditRole"] != "sponsor":
       validity = evaluation["value"]
     elif evaluation["type"] == "severity":
       severity = evaluation["value"]
