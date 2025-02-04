@@ -71,10 +71,7 @@ def pp_time(epoch_time):
   return dt.isoformat()
 
 def is_high(finding_or_submission):
-  return finding_or_submission["severity"] == "High"
-
-def is_medium(s):
-  return s["severity"] == "M"
+  return finding_or_submission["severity"].lower() == "high"
 
 def get_quality(submission):
   quality = None
