@@ -28,9 +28,11 @@ $ ./c4-review payouts 2023-08-goodentry-findings 46000 | jq
 
 Before running it, you'll need to:
 - install Python 3 if you haven't already
-- install [PyGithub](https://github.com/PyGithub/PyGithub)
-- generate [a GitHub access token](https://github.com/settings/tokens) with `repository` access
-- set the token generated above to the `GITHUB_ACCESS_TOKEN` environment variable 
+- login to the [C4 website](https://code4rena.com/)
+- Copy the `C4AUTH-LOGIN` cookie and set it to the `C4AUTH_LOGIN` environment variable:
+  - you can use the [EditThisCåookie](https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol) Chrome extension to read it
+  - then you can set it i.e. `export C4AUTH_LOGIN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb2RlNHJlbmEiLCJzdWIiOiI2Z05jd3FZbk1oTSIsImlhdCI6MTczODUxNDEzOCwic2NvcGUiOiJyZWZyZXNoIn0.ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+
 
 ## Usage
 
@@ -41,34 +43,17 @@ $ ./c4-review --help
 ```
 
 ```
-usage: c4-review [-h] {payouts,findings,open} ...
+usage: c4-review [-h] {payouts} ...
 
-Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle
+Analyzes the C4 findings data and provides stats. Estimates payout if you provide a handle
 
 positional arguments:
-  {payouts,findings,open}
+  {payouts}
 
 options:
   -h, --help          show this help message and exit
 ```
-### `findings` command
 
-```
-$ ./c4-review findings --help
-```
-
-```
-usage: c4-review findings [-h] findings_repo [pot_size]
-
-Summary of findings, including duplicate counts
-
-positional arguments:
-  findings_repo
-  pot_size
-
-options:
-  -h, --help  show this help message and exit
-```
 ### `payouts` command
 
 ```
@@ -76,12 +61,12 @@ $ ./c4-review payouts --help
 ```
 
 ```
-usage: c4-review payouts [-h] [-w [HANDLE]] findings_repo [pot_size]
+usage: c4-review payouts [-h] [-w [HANDLE]] contest_slug [pot_size]
 
 Find out the fraction of total pot or payouts
 
 positional arguments:
-  findings_repo
+  contest_slug
   pot_size
 
 options:
@@ -97,211 +82,3 @@ $ ./c4-review open --help
 usage: c4-review open [-h] findings_repo handle
 
 Opens in a browser tab all findings reported by a given warden
-
-## Findings summary
-Note: the below examples use data taken from an actual contest - [Amphora protocol](https://code4rena.com/contests/2023-07-amphora-protocol))
-
-```
-$ ./c4-review findings 2023-07-amphora-findings 46250
-```
-
-```json
-{                                                                                                                                                                                 [60/25031]
-  "totalShares": 32.48464550591162,
-  "findings": [
-    {
-      "id": "233",
-      "dups": 1,
-      "leadFinding": "ljmanini",
-      "handles": [
-        "ljmanini"
-      ],
-      "severity": "M",
-      "githubIssueId": "233",
-      "sharesForIssue": 3.0,
-      "sharesPerDup": 3.0,
-      "fractionPerDup": 0.09235132331839835,
-      "payoutPerDup": "$4,271.25"
-    },
-    {
-      "id": "256",
-      "dups": 19,
-      "leadFinding": "giovannidisiena",
-      "handles": [
-        "josephdara",
-        "mert_eren",
-        "adeolu",
-        "ak1",
-        "pep7siup",
-        "Bauchibred",
-        "qpzm",
-        "SanketKogekar",
-        "said",
-        "giovannidisiena",
-        "Giorgio",
-        "ljmanini",
-        "Musaka",
-        "SpicyMeatball",
-        "0xbranded",
-        "0xComfyCat",
-        "0xWaitress",
-        "erebus",
-        "kutugu"
-      ],
-      "severity": "H",
-      "githubIssueId": "256",
-      "sharesForIssue": 1.5009463529699918,
-      "sharesPerDup": 0.07899717647210483,
-      "fractionPerDup": 0.002431831261871975,
-      "payoutPerDup": "$112.47"
-    },
-    "... continued ..."
-  ],
-  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
-}
-```
-
-## Fractions for each handle
-
-```
-$ ./c4-review payouts 2023-07-amphora-findings
-```
-
-```json
-{
-  "totalShares": 32.48464550591162,
-  "payouts": [
-    {
-      "handle": "minhtrng",
-      "findings": [
-        {
-          "id": "414",
-          "dups": 1,
-          "fractionPerDup": 0.09235132331839835,
-          "isLeadFinding": true
-        },
-        {
-          "id": "301",
-          "dups": 2,
-          "fractionPerDup": 0.13852698497759752,
-          "isLeadFinding": false
-        }
-      ],
-      "fraction": 0.25858370529151536
-    },
-    {
-      "handle": "said",
-      "findings": [
-        {
-          "id": "301",
-          "dups": 2,
-          "fractionPerDup": 0.13852698497759752,
-          "isLeadFinding": true
-        },
-        {
-          "id": "256",
-          "dups": 19,
-          "fractionPerDup": 0.002431831261871975,
-          "isLeadFinding": false
-        }
-      ],
-      "fraction": 0.18251691173274875
-    },
-    "... continued ..."
-  ],
-  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
-}
-```
-
-## Payouts for each handle
-
-```
-$ ./c4-review payouts 2023-07-amphora-findings 46250
-```
-
-```json
-{
-  "totalShares": 32.48464550591162,
-  "payouts": [
-    {
-      "handle": "minhtrng",
-      "findings": [
-        {
-          "id": "301",
-          "dups": 2,
-          "fractionPerDup": 0.13852698497759752,
-          "isLeadFinding": false,
-          "payoutPerDup": "$6,406.87"
-        },
-        {
-          "id": "414",
-          "dups": 1,
-          "fractionPerDup": 0.09235132331839835,
-          "isLeadFinding": true,
-          "payoutPerDup": "$4,271.25"
-        }
-      ],
-      "fraction": 0.25858370529151536,
-      "payout": "$11,959.50"
-    },
-    {
-      "handle": "said",
-      "findings": [
-        {
-          "id": "256",
-          "dups": 19,
-          "fractionPerDup": 0.002431831261871975,
-          "isLeadFinding": false,
-          "payoutPerDup": "$112.47"
-        },
-        {
-          "id": "301",
-          "dups": 2,
-          "fractionPerDup": 0.13852698497759752,
-          "isLeadFinding": true,
-          "payoutPerDup": "$6,406.87"
-        }
-      ],
-      "fraction": 0.18251691173274875,
-      "payout": "$8,441.41"
-    },
-    "... continued ...",
-  ],
-  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
-}
-```
-
-## Payouts for specific warden
-```
-$ ./c4-review payouts 2023-07-amphora-findings 46250 -w said
-```
-
-```json
-{
-  "totalShares": 32.48464550591162,
-  "payouts": [
-    {
-      "handle": "said",
-      "findings": [
-        {
-          "id": "256",
-          "dups": 19,
-          "fractionPerDup": 0.002431831261871975,
-          "isLeadFinding": false,
-          "payoutPerDup": "$112.47"
-        },
-        {
-          "id": "301",
-          "dups": 2,
-          "fractionPerDup": 0.13852698497759752,
-          "isLeadFinding": true,
-          "payoutPerDup": "$6,406.87"
-        }
-      ],
-      "fraction": 0.18251691173274875,
-      "payout": "$8,441.41"
-    }
-  ],
-  "note": "This tool only calculates shares for Highs and Mediums and will overestimate a little. It does not take into account QA reports."
-}
-```

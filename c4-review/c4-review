@@ -5,103 +5,59 @@ import json
 import argparse
 import datetime
 import os.path
-from github import Github
-from github import Auth
 import webbrowser
+import requests
 
-gh_token = os.getenv("GITHUB_ACCESS_TOKEN")
-if not gh_token:
-  print("Github token not found.\nGenerate one at https://github.com/settings/tokens and set it to the GITHUB_ACCESS_TOKEN environment variable")
+c4auth_login = os.getenv("C4AUTH_LOGIN")
+if not c4auth_login:
+  print("C4AUTH_LOGIN environment variable not found.")
+  print("Grab yours by:")
+  print("- logging in on the C4 website")
+  print("- reading it via a cookie editor i.e. the 'Edit this cookie' Chrome extension")
+  print("- and copying it to the C4AUTH_LOGIN environment variable")
   exit(1)
 
-g = Github(auth=Auth.Token(gh_token))
 handles = {}
 disputed_reports = set()
 
 BASE = 0.85 # Base for Sybil protection. Was once 0.9 but 0.85 since Jul 2024
 
 parser = argparse.ArgumentParser(prog="c4-review", formatter_class=argparse.RawTextHelpFormatter,
-                                 description="Analyzes the GitHub findings repo and provides stats. Estimates payout if you provide a handle")
+                                 description="Analyzes the C4 findings data and provides stats. Estimates payout if you provide a handle")
 subp = parser.add_subparsers(dest="command") # dest="command" means that we see which command was parsed
 
 base_help = f"Change base (default {BASE}) for Sybil protection e.g. --base=0.9 (for old comps)"
 
 payout = subp.add_parser("payouts", description="Find out the fraction of total pot or payouts")
-payout.add_argument('findings_repo', type=str)
+payout.add_argument('contest_slug', type=str)
 payout.add_argument('pot_size', type=int, nargs='?')
 payout.add_argument('-d', '--ignore_disputed', type=bool)
 payout.add_argument('-w', '--handle', type=str, nargs='?')
 payout.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
-findings = subp.add_parser("findings", description="Summary of findings, including duplicate counts")
-findings.add_argument('findings_repo', type=str)
-findings.add_argument('pot_size', type=int, nargs='?')
-findings.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
-
 open = subp.add_parser("open", description="Opens all findings from a given warden in browser")
-open.add_argument('findings_repo', type=str)
+open.add_argument('contest_slug', type=str)
 open.add_argument('handle', type=str)
 
-def get_participants_from_gh(ns):
-  repo = get_repo(ns)
+def get_findings(ns):
+  headers = {
+    "content-type": "application/json",
+    "cookie": f"C4AUTH-LOGIN={os.getenv('C4AUTH_LOGIN')}"
+  }
 
-  # build issue-to-handle map
-  b = repo.get_branch(repo.default_branch)
-  t = repo.get_git_tree(b.commit.sha, recursive=True)
+  findings = []
 
-  for content in t.tree:
-    if content.path.endswith(".json"):
-      handle, issue_id = content.path.split("/")[-1].replace(".json", "").rsplit("-", 1)
-      handles[issue_id] = handle
+  page = 1
+  last_page = 1
 
-def get_records_from_gh(ns):
-  repo = get_repo(ns)
-  issues = repo.get_issues(state="all")
-  ret = []
-  unsatisfactory_issues = set()
-  for i in issues:
-    if 'unsatisfactory' in [label.name for label in i.labels]:
-      unsatisfactory_issues.add(str(i.number))
+  while page <= last_page:
+    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/findings?perPage=100&page={page}"
+    response = requests.get(url, headers=headers).json()
+    findings.extend(response['data'])
+    last_page = response['pagination']['lastPage']
+    page += 1
 
-  for i in issues:
-    duplicate_of = ""
-    issue_id = str(i.number)
-    report_id = issue_id
-    severity = None
-    skip = False
-    percentage = 100
-
-    for l in i.labels:
-      if l.name.startswith("duplicate-"):
-        duplicate_of = l.name.replace("duplicate-", "")
-        report_id = duplicate_of
-        if duplicate_of in unsatisfactory_issues:
-          skip = True
-      elif l.name == "2 (Med Risk)":
-        severity = "M"
-      elif l.name == "3 (High Risk)":
-        severity = "H"
-      elif l.name in ['unsatisfactory', 'withdrawn by warden', 'withdrawn by judge',
-                      'nullified', 'ineligible for award']:
-        skip = True
-      elif l.name.startswith("partial-"):
-        percentage = int(l.name.split("-")[1])
-      elif l.name == "sponsor disputed":
-        disputed_reports.add(issue_id)
-
-    if skip or severity is None:
-      continue
-
-    ret.append({
-      "issueId": issue_id,
-      "reportId": report_id,
-      "duplicateOf": duplicate_of,
-      "severity": severity,
-      "handle": handles.get(issue_id, "unknown"),
-      "percentage": percentage
-    })
-
-  return ret
+  return findings
 
 def pp_usd(n):
   return '${:0,.2f}'.format(round(n, 2))
@@ -114,101 +70,106 @@ def pp_time(epoch_time):
   dt = datetime.datetime.fromtimestamp(epoch_time)
   return dt.isoformat()
 
-def is_high(s):
-  return s["severity"] == "H"
+def is_high(finding_or_submission):
+  return finding_or_submission["severity"].lower() == "high"
 
-def is_medium(s):
-  return s["severity"] == "M"
+def get_credit(submission):
+  quality = None
+  credit = 1.0
 
-def get_repo(ns):
-  return g.get_repo(f"code-423n4/{ns.findings_repo}")
+  for evaluation in submission["evaluations"]:
+    if evaluation["type"] == "quality":
+      quality = evaluation["value"]
+    elif evaluation["type"] == "credit":
+      credit = int(evaluation["value"][:-1]) / 100
 
-def get_issue_summary(ns):
-  get_participants_from_gh(ns)
-  rs = get_records_from_gh(ns)
+  if quality != "sufficient":
+    return 0
 
-  dup_sets = {}
-  for r in rs:
-    id = r["reportId"]
-    if id in disputed_reports and ns.ignore_disputed == True:
-      continue
-    if not id in dup_sets:
-      dup_sets[id] = { "id": id, "dups": 0, "leadFinding": "unknown", "handles": [], "findings": [] }
-    if r["duplicateOf"] == "":
-      dup_sets[id]["severity"] = r["severity"]
-      dup_sets[id]["leadFinding"] = r["handle"]
-      dup_sets[id]["githubIssueId"] = r["issueId"]
-    if not r["handle"] in dup_sets[id]["handles"]:
-      dup_sets[id]["dups"] += 1
-      dup_sets[id]["handles"].append(r["handle"])
-      # Assumes no warden will get multiple duplicates of the same finding with different partial credit
-      dup_sets[id]["findings"].append({ "handle": r["handle"], "percentage": r["percentage"], "issueId": r["issueId"] })
+  return credit
 
-  ## Calculate shares
-  total_shares = 0.0
-  for id in dup_sets:
-    if "githubIssueId" not in dup_sets[id]:
-      print(f"Warning: dangling issue found:")
-      print(json.dumps(dup_sets[id], indent=2))
-      continue
-    num_dups = dup_sets[id]["dups"]
-    base_shares = 10 if is_high(dup_sets[id]) else 3
-    group_shares = base_shares * BASE**(num_dups - 1) * (num_dups + 0.3) / num_dups # including 30% selected for report bonus
+def get_validity_and_severity(finding):
+  validity = None
+  severity = finding["submissions"]["data"][0]["severity"]
 
-    total_credit = 0.0
-    for finding in dup_sets[id]["findings"]:
-      if finding["handle"] == dup_sets[id]["leadFinding"]:
-        finding["sliceCredit"] = 1.3
-      else:
-        finding["sliceCredit"] = finding["percentage"] / 100.0
-      total_credit += finding["sliceCredit"]
+  for evaluation in finding["evaluations"]:
+    if evaluation["type"] == "validity" and evaluation["userAuditRole"] != "sponsor":
+      validity = evaluation["value"]
+    elif evaluation["type"] == "severity":
+      severity = evaluation["value"]
 
-    for finding in dup_sets[id]["findings"]:
-      finding["shares"] = group_shares * (finding["sliceCredit"] / total_credit)
-      total_shares += finding["shares"]
-
-  # Remove elements without githubIssueId
-  dup_sets = {id: dup_sets[id] for id in dup_sets if "githubIssueId" in dup_sets[id]}
-
-  # A pass to calculate fractions and payouts
-  for id in dup_sets:
-    for finding in dup_sets[id]["findings"]:
-      finding["fraction"] = finding["shares"] / total_shares
-      if ns.pot_size != None:
-        finding["payout"] = finding["fraction"] * ns.pot_size * 0.8 # remove bonuses
-
-  return { "totalShares": total_shares, "issueMap": dup_sets }
+  return (validity, severity)
 
 def payout(ns):
-  issue_summary = get_issue_summary(ns)
-  dup_sets = issue_summary["issueMap"]
+  findings = get_findings(ns)
+
+  ws = {}
+  total_shares = 0
+
+  for finding in findings:
+    num_dups = 0
+    validity, severity = get_validity_and_severity(finding)
+    finding["severity"] = severity
+
+    if validity != "valid" or severity not in ["high", "medium"]:
+      continue
+
+    for submission in finding["submissions"]['data']:
+      credit = get_credit(submission)
+      if credit == 0:
+        continue
+
+      num_dups += credit
+
+    if num_dups == 0:
+      continue
+
+    base_shares = 10 if is_high(finding) else 3
+    finding["shares"] = base_shares * BASE**(num_dups - 1) / num_dups
+    finding["dups"] = num_dups
+    total_shares += finding["shares"] * (num_dups + 0.3)
+
 
   # Summarise results for each handle
-  ws = {}
-  for id in dup_sets:
-    for dup in dup_sets[id]["findings"]:
-      w = dup["handle"]
+  for finding in findings:
+    if "shares" not in finding:
+      continue
+
+    for idx, submission in enumerate(finding["submissions"]['data']):
+      credit = get_credit(submission)
+      if credit == 0:
+        continue
+    
+      if idx == 0:
+        submission["sliceCredit"] = 1.3
+      else:
+        submission["sliceCredit"] = credit
+      
+      submission["shares"] = finding["shares"] * submission["sliceCredit"]
+
+      w = submission["user"]["handle"]
+      if submission["team"] != None:
+        w = f"{submission['team']['handle']} ({', '.join(sorted(m['handle'] for m in submission['team']['members']))})"
       if not w in ws:
         ws[w] = { "rank": 0, "handle": w }
         if ns.pot_size != None:
           ws[w]["payout"] = 0.0
         ws[w].update({ "findings": [], "findingsCount": 0, "fraction": 0.0 })
 
-      is_lead_finding = dup_sets[id]["leadFinding"] == w
-      rec = { "findingId": dup["issueId"],
-        "isLeadFinding": is_lead_finding,
-        "leadFindingId" : dup_sets[id]["githubIssueId"],
-        "severity": dup_sets[id]["severity"],
-        "dups": dup_sets[id]["dups"],
-        "sliceCredit": dup["sliceCredit"],
-        "shares": dup["shares"]
+      rec = { 
+        "submissionId" : "S-" + str(submission["number"]),
+        "findingId": "F-" + str(finding["number"]),
+        "isLeadSubmission": idx == 0,
+        "severity": finding["severity"],
+        "dups": finding["dups"],
+        "sliceCredit": submission["sliceCredit"],
+        "shares": submission["shares"]
       }
       ws[w]["findings"].append(rec)
 
-      ws[w]["fraction"] += dup["fraction"]
       if ns.pot_size != None:
-        rec["payout"] = dup["payout"]
-        ws[w]["payout"] += dup["payout"]
+        rec["payout"] = ns.pot_size * 0.8 * rec["shares"] / total_shares
+        ws[w]["payout"] += rec["payout"]
 
   for w in ws:
     ws[w]["findingsCount"] = len(ws[w]["findings"])
@@ -217,8 +178,8 @@ def payout(ns):
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
   hunters, highest_hunter_score = ([], 0)
-  num_highs = sum(dup_sets[id]["severity"] == "H" for id in dup_sets)
-  num_mediums = sum(dup_sets[id]["severity"] == "M" for id in dup_sets)
+  num_highs = sum(finding["severity"] == "high" and "shares" in finding for finding in findings)
+  num_mediums = sum(finding["severity"] == "medium" and "shares" in finding for finding in findings)
 
   for w in ws:
     gatherer_score = 0
@@ -256,7 +217,7 @@ def payout(ns):
         ws[winner]["payout"] += bonus / len(winners)
 
   # Prepare and format warden summaries for output
-  warden_summaries = [ws[w] for w in ws if (lambda w: ns.handle == None or w == ns.handle)(w)]
+  warden_summaries = [ws[w] for w in ws if (lambda w: ns.handle == None or ns.handle in w)(w)]
   if ns.pot_size != None:
     warden_summaries.sort(key=lambda r: -r["payout"])
   else: # should be the same
@@ -269,26 +230,7 @@ def payout(ns):
       for finding in warden_summaries[i]['findings']:
         finding['payout'] = round(finding['payout'], 2)
 
-  return { "totalShares": issue_summary["totalShares"], "payouts": warden_summaries }
-
-def open(ns):
-  get_participants_from_gh(ns)
-
-  repo = get_repo(ns)
-
-  for i, handle in handles.items():
-    if handle == ns.handle:
-      webbrowser.open(f"{repo.html_url}/issues/{i}", new=1, autoraise=True)
-
-def findings(ns):
-  issue_summary = get_issue_summary(ns)
-  h = issue_summary["issueMap"]
-  for id in h:
-    if "payoutPerDup" in h[id]:
-      h[id]["payoutPerDup"] = pp_usd(h[id]["payoutPerDup"])
-  rs = [h[k] for k in h]
-  rs.sort(key=lambda r: r["id"])
-  return { "totalShares": issue_summary["totalShares"], "findings": rs }
+  return { "totalShares": total_shares, "payouts": warden_summaries }
 
 ns = parser.parse_args(sys.argv[1:])
 
@@ -306,12 +248,9 @@ def set_base(base):
 if ns.command == "payouts":
   set_base(ns.base)
   result = payout(ns)
-elif ns.command == "findings":
-  set_base(ns.base)
-  result = findings(ns)
-elif ns.command == "open":
-  open(ns)
-  result = {}
+# elif ns.command == "open": TODO reintroduce
+#   open(ns)
+#   result = {}
 else:
   parser.parse_args(["--help"])
 
