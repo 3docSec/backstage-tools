@@ -7,6 +7,7 @@ import datetime
 import os.path
 import webbrowser
 import requests
+from collections import defaultdict
 
 c4auth_login = os.getenv("C4AUTH_LOGIN")
 if not c4auth_login:
@@ -245,6 +246,7 @@ def payout(ns):
       rec = { 
         "submissionId" : "S-" + str(submission["number"]),
         "findingId": "F-" + str(finding["number"]),
+        "leadFindingId": "F-" + str(finding["number"]),
         "isLeadSubmission": idx == 0,
         "severity": finding["severity"],
         "dups": finding["dups"],
@@ -261,6 +263,20 @@ def payout(ns):
     ws[w]["findingsCount"] = len(ws[w]["findings"])
     ws[w]["findings"].sort(key=lambda r: -r["shares"])
 
+  # Build duplicate sets per finding and precompute effective duplicate counts
+  dup_sets: dict = defaultdict(list)
+  for w in ws:
+    for rec in ws[w]["findings"]:
+      fid = rec.get("leadFindingId") or rec.get("findingId")
+      dup_sets[fid].append(rec)
+
+  # Map findingId -> (raw_effective_dups, denominator)
+  # raw_effective_dups = sum(sliceCredit) - 0.3; denominator is clamped to >= 1
+  effective_dups_by_finding = {}
+  for fid, recs in dup_sets.items():
+    raw = sum(r.get("sliceCredit", 0) for r in recs) - 0.3
+    effective_dups_by_finding[fid] = (raw, max(raw, 1))
+
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
   hunters, highest_hunter_score = ([], 0)
@@ -273,14 +289,13 @@ def payout(ns):
     for f in ws[w]["findings"]:
       severity_score = 10 if is_high(f) else 3
       total_severity_findings = num_highs if is_high(f) else num_mediums
-      # Only full-credit findings count towards TH/TG scoring, but partial credits affect duplicate count
-      # (see https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
+      # Only full-credit findings count; partial credits affect effective duplicate count
       if f["sliceCredit"] >= 1:
         gatherer_score += severity_score / total_severity_findings
-        # Calculate effective number of duplicates including partial credits, remove bonus for selected
-        effective_dups = sum(d["sliceCredit"] for d in dup_sets[f["leadFindingId"]]["findings"]) - 0.3
-        if effective_dups < 5:
-          hunter_score += severity_score / effective_dups
+        fid = f.get("leadFindingId") or f.get("findingId")
+        raw_dups, denom = effective_dups_by_finding.get(fid, (0, 1))
+        if raw_dups < 5:
+          hunter_score += severity_score / denom
 
     ws[w]["gathererScore"] = gatherer_score
     if gatherer_score > highest_gatherer_score:
