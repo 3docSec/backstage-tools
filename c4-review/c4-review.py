@@ -273,13 +273,14 @@ def payout(ns):
     for f in ws[w]["findings"]:
       severity_score = 10 if is_high(f) else 3
       total_severity_findings = num_highs if is_high(f) else num_mediums
-      # Partial dupes do not count towards the TH/TG scoring
-      # (see https://discord.com/channels/810916927919620096/976603323450941440/1302960578091946074
-      # or https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
+      # Only full-credit findings count towards TH/TG scoring, but partial credits affect duplicate count
+      # (see https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
       if f["sliceCredit"] >= 1:
         gatherer_score += severity_score / total_severity_findings
-        if f["dups"] <= 5:
-          hunter_score += severity_score / f["dups"]
+        # Calculate effective number of duplicates including partial credits, remove bonus for selected
+        effective_dups = sum(d["sliceCredit"] for d in dup_sets[f["leadFindingId"]]["findings"]) - 0.3
+        if effective_dups < 5:
+          hunter_score += severity_score / effective_dups
 
     ws[w]["gathererScore"] = gatherer_score
     if gatherer_score > highest_gatherer_score:
