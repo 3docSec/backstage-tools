@@ -6,6 +6,7 @@ import argparse
 import datetime
 import os.path
 import requests
+import concurrent.futures
 
 c4auth_login = os.getenv("C4AUTH_LOGIN")
 if not c4auth_login:
@@ -42,43 +43,52 @@ def get_findings(ns):
   }
 
   all_submissions = []
-  page = 1
-  last_page = 1
 
-  while page <= last_page:
+  def fetch_page(session, page):
     url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/submissions?perPage=100&page={page}"
-    resp = requests.get(url, headers=headers)
+    resp = session.get(url, headers=headers)
     if resp.status_code != 200:
       try:
         body = resp.json()
       except Exception:
         body = resp.text
-      print(f"Error fetching findings (HTTP {resp.status_code}) for page {page}.")
-      print("Response:")
-      print(body)
-      print("Hint: Ensure C4AUTH_LOGIN is valid and the contest is accessible.")
-      exit(1)
-
+      raise RuntimeError(f"HTTP {resp.status_code} page {page}: {body}")
     try:
       response = resp.json()
     except Exception as e:
-      print(f"Invalid JSON from API: {e}")
-      print(resp.text[:500])
-      exit(1)
-
+      raise RuntimeError(f"Invalid JSON on page {page}: {e} :: {resp.text[:500]}")
     if not isinstance(response, dict) or 'data' not in response:
-      print("Unexpected API response: missing 'data'. Full response below:")
-      try:
-        print(json.dumps(response, indent=2))
-      except Exception:
-        print(response)
-      exit(1)
-
+      raise RuntimeError(f"Unexpected API response on page {page}: {response}")
     subs = response.get('data', {}).get('submissions', response.get('data'))
-    if isinstance(subs, list):
-      all_submissions.extend(subs)
-    last_page = response.get('pagination', {}).get('lastPage', last_page)
-    page += 1
+    if not isinstance(subs, list):
+      subs = []
+    pagination = response.get('pagination', {})
+    return subs, pagination
+
+  with requests.Session() as session:
+    # First page (to get lastPage)
+    try:
+      subs, pagination = fetch_page(session, 1)
+    except Exception as e:
+      print(f"Error fetching findings: {e}")
+      print("Hint: Ensure C4AUTH_LOGIN is valid and the contest is accessible.")
+      exit(1)
+    all_submissions.extend(subs)
+    last_page = pagination.get('lastPage', 1) or 1
+
+    # Remaining pages concurrently
+    if last_page > 1:
+      pages = list(range(2, last_page + 1))
+      with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(pages))) as ex:
+        futures = {ex.submit(fetch_page, session, p): p for p in pages}
+        for fut in concurrent.futures.as_completed(futures):
+          p = futures[fut]
+          try:
+            subs, _ = fut.result()
+            all_submissions.extend(subs)
+          except Exception as e:
+            print(f"Error fetching page {p}: {e}")
+            exit(1)
 
   # Transform submissions list into finding-like aggregates used by the rest of the script
   by_finding = {}
@@ -111,10 +121,13 @@ def get_findings(ns):
       'team': sub.get('team'),
       'severity': sub.get('severity'),
       'evaluations': sub.get('evaluations') or [],
+      'isPrimary': sub.get('isPrimary', False),
     })
 
   findings_list = []
   for f in by_finding.values():
+    # Ensure primary submission, when present, is first to preserve business logic
+    f['submissions']['data'].sort(key=lambda s: (not s.get('isPrimary', False), s.get('number') or 0))
     dups = 0
     for sub in f['submissions']['data']:
       credit = 1.0
