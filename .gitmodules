@@ -1,0 +1,3 @@
+[submodule "c4-table"]
+	path = c4-table
+	url = https://github.com/carrotsmuggler/c4-table
