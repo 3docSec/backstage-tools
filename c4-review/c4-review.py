@@ -5,9 +5,7 @@ import json
 import argparse
 import datetime
 import os.path
-import webbrowser
 import requests
-from collections import defaultdict
 
 c4auth_login = os.getenv("C4AUTH_LOGIN")
 if not c4auth_login:
@@ -17,9 +15,6 @@ if not c4auth_login:
   print("- reading it via a cookie editor i.e. the 'Edit this cookie' Chrome extension")
   print("- and copying it to the C4AUTH_LOGIN environment variable")
   exit(1)
-
-handles = {}
-disputed_reports = set()
 
 BASE = 0.85 # Base for Sybil protection. Was once 0.9 but 0.85 since Jul 2024
 
@@ -46,13 +41,11 @@ def get_findings(ns):
     "cookie": f"C4AUTH-LOGIN={os.getenv('C4AUTH_LOGIN')}"
   }
 
-  findings = []
-
+  all_submissions = []
   page = 1
   last_page = 1
 
   while page <= last_page:
-    # API change: findings moved behind submissions list; fetch submissions and rebuild finding aggregates
     url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/submissions?perPage=100&page={page}"
     resp = requests.get(url, headers=headers)
     if resp.status_code != 200:
@@ -81,51 +74,45 @@ def get_findings(ns):
         print(response)
       exit(1)
 
-    # The submissions endpoint returns { data: { submissions: [...] }, pagination: {...} }
-    data = response['data']
-    subs = data['submissions'] if isinstance(data, dict) and 'submissions' in data else response['data']
-
-    findings.extend(subs)
+    subs = response.get('data', {}).get('submissions', response.get('data'))
+    if isinstance(subs, list):
+      all_submissions.extend(subs)
     last_page = response.get('pagination', {}).get('lastPage', last_page)
     page += 1
 
   # Transform submissions list into finding-like aggregates used by the rest of the script
-  # Group by finding uid (or by (title, severity) if missing)
   by_finding = {}
-  for sub in findings:
-    finding_key = None
+  for sub in all_submissions:
     if isinstance(sub, dict) and 'finding' in sub and isinstance(sub['finding'], dict):
       finding_key = sub['finding'].get('uid') or sub['finding'].get('number')
       finding_number = sub['finding'].get('number')
+      finding_uid = sub['finding'].get('uid')
     else:
       finding_key = (sub.get('title'), sub.get('severity'))
       finding_number = None
+      finding_uid = None
 
     if finding_key not in by_finding:
       by_finding[finding_key] = {
-        'uid': sub['finding'].get('uid') if isinstance(sub.get('finding'), dict) else None,
+        'uid': finding_uid,
         'number': finding_number,
         'evaluations': [],
         'submissions': { 'data': [] },
         'duplicates': 0,
       }
 
-    # Aggregate evaluations at finding level: collect all evaluation records with type in {validity,severity}
     for ev in (sub.get('evaluations') or []):
       if ev.get('type') in ['validity', 'severity']:
         by_finding[finding_key]['evaluations'].append(ev)
 
-    # Add to submissions data with required shape
-    sub_entry = {
+    by_finding[finding_key]['submissions']['data'].append({
       'number': sub.get('number'),
       'user': sub.get('user'),
       'team': sub.get('team'),
       'severity': sub.get('severity'),
       'evaluations': sub.get('evaluations') or [],
-    }
-    by_finding[finding_key]['submissions']['data'].append(sub_entry)
+    })
 
-  # Compute duplicates (unique/partial count) as count of non-zero credit submissions; fallback to total submissions
   findings_list = []
   for f in by_finding.values():
     dups = 0
@@ -148,14 +135,6 @@ def get_findings(ns):
 
 def pp_usd(n):
   return '${:0,.2f}'.format(round(n, 2))
-
-def pp_month(epoch_time):
-  dt = datetime.datetime.fromtimestamp(epoch_time)
-  return dt.strftime("%B %Y")
-
-def pp_time(epoch_time):
-  dt = datetime.datetime.fromtimestamp(epoch_time)
-  return dt.isoformat()
 
 def is_high(finding_or_submission):
   return finding_or_submission["severity"].lower() == "high"
@@ -216,7 +195,6 @@ def payout(ns):
     finding["dups"] = num_dups
     total_shares += finding["shares"] * (num_dups + 0.3)
 
-
   # Summarise results for each handle
   for finding in findings:
     if "shares" not in finding:
@@ -226,12 +204,12 @@ def payout(ns):
       credit = get_credit(submission)
       if credit == 0:
         continue
-    
+
       if idx == 0:
         submission["sliceCredit"] = 1.3
       else:
         submission["sliceCredit"] = credit
-      
+
       submission["shares"] = finding["shares"] * submission["sliceCredit"]
 
       w = submission["user"]["handle"]
@@ -261,21 +239,16 @@ def payout(ns):
 
   for w in ws:
     ws[w]["findingsCount"] = len(ws[w]["findings"])
-    ws[w]["findings"].sort(key=lambda r: -r["shares"])
+    ws[w]["findings"].sort(key=lambda r: -r["shares"]) 
 
-  # Build duplicate sets per finding and precompute effective duplicate counts
-  dup_sets: dict = defaultdict(list)
+  # Build duplicate sets per finding to compute effective duplicate counts (sum of sliceCredits)
+  dup_sets = {}
   for w in ws:
     for rec in ws[w]["findings"]:
       fid = rec.get("leadFindingId") or rec.get("findingId")
-      dup_sets[fid].append(rec)
-
-  # Map findingId -> (raw_effective_dups, denominator)
-  # raw_effective_dups = sum(sliceCredit) - 0.3; denominator is clamped to >= 1
-  effective_dups_by_finding = {}
-  for fid, recs in dup_sets.items():
-    raw = sum(r.get("sliceCredit", 0) for r in recs) - 0.3
-    effective_dups_by_finding[fid] = (raw, max(raw, 1))
+      if fid not in dup_sets:
+        dup_sets[fid] = { "findings": [] }
+      dup_sets[fid]["findings"].append(rec)
 
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
@@ -289,13 +262,16 @@ def payout(ns):
     for f in ws[w]["findings"]:
       severity_score = 10 if is_high(f) else 3
       total_severity_findings = num_highs if is_high(f) else num_mediums
-      # Only full-credit findings count; partial credits affect effective duplicate count
+      # Only full-credit findings count towards TH/TG scoring, but partial credits affect duplicate count
+      # (see https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
       if f["sliceCredit"] >= 1:
         gatherer_score += severity_score / total_severity_findings
+        # Calculate effective number of duplicates including partial credits, remove lead bonus (0.3)
         fid = f.get("leadFindingId") or f.get("findingId")
-        raw_dups, denom = effective_dups_by_finding.get(fid, (0, 1))
-        if raw_dups < 5:
-          hunter_score += severity_score / denom
+        group = dup_sets.get(fid, {"findings": []})["findings"]
+        effective_dups = sum(d.get("sliceCredit", 0) for d in group) - 0.3
+        if effective_dups < 5:
+          hunter_score += severity_score / max(effective_dups, 1)
 
     ws[w]["gathererScore"] = gatherer_score
     if gatherer_score > highest_gatherer_score:
