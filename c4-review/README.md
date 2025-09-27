@@ -30,7 +30,7 @@ Before running it, you'll need to:
 - install Python 3 if you haven't already
 - login to the [C4 website](https://code4rena.com/)
 - Copy the `C4AUTH-LOGIN` cookie and set it to the `C4AUTH_LOGIN` environment variable:
-  - you can use the [EditThisCåookie](https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol) Chrome extension to read it
+  - you can use the [EditThisCookie](https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol) Chrome extension to read it
   - then you can set it i.e. `export C4AUTH_LOGIN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb2RlNHJlbmEiLCJzdWIiOiI2Z05jd3FZbk1oTSIsImlhdCI6MTczODUxNDEzOCwic2NvcGUiOiJyZWZyZXNoIn0.ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 
 

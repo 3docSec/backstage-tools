@@ -6,6 +6,7 @@ import argparse
 import datetime
 import os.path
 import requests
+import webbrowser
 import concurrent.futures
 
 c4auth_login = os.getenv("C4AUTH_LOGIN")
@@ -179,6 +180,75 @@ def get_validity_and_severity(finding):
 
   return (validity, severity)
 
+def open_cmd(ns):
+  headers = {
+    "content-type": "application/json",
+    "cookie": f"C4AUTH-LOGIN={os.getenv('C4AUTH_LOGIN')}"
+  }
+
+  handle = ns.handle
+  urls = []
+
+  def fetch_page(session, page):
+    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/submissions?perPage=100&page={page}"
+    resp = session.get(url, headers=headers)
+    if resp.status_code != 200:
+      try:
+        body = resp.json()
+      except Exception:
+        body = resp.text
+      raise RuntimeError(f"HTTP {resp.status_code} page {page}: {body}")
+    data = resp.json()
+    subs = data.get('data', {}).get('submissions', data.get('data', []))
+    if not isinstance(subs, list):
+      subs = []
+    pagination = data.get('pagination', {})
+    return subs, pagination
+
+  def matches_handle(sub):
+    u = sub.get('user') or {}
+    if u.get('handle') == handle:
+      return True
+    team = sub.get('team') or {}
+    if team.get('handle') == handle:
+      return True
+    members = team.get('members') or []
+    for m in members:
+      if m.get('handle') == handle:
+        return True
+    return False
+
+  with requests.Session() as session:
+    try:
+      subs, pagination = fetch_page(session, 1)
+    except Exception as e:
+      print(f"Error fetching submissions: {e}")
+      exit(1)
+    for s in subs:
+      if matches_handle(s):
+        urls.append(f"https://code4rena.com/contests/{ns.contest_slug}/submissions/{s.get('number')}")
+    last_page = pagination.get('lastPage', 1) or 1
+    if last_page > 1:
+      pages = list(range(2, last_page + 1))
+      with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(pages))) as ex:
+        futures = {ex.submit(fetch_page, session, p): p for p in pages}
+        for fut in concurrent.futures.as_completed(futures):
+          p = futures[fut]
+          try:
+            subs, _ = fut.result()
+            for s in subs:
+              if matches_handle(s):
+                urls.append(f"https://code4rena.com/contests/{ns.contest_slug}/submissions/{s.get('number')}")
+          except Exception as e:
+            print(f"Error fetching page {p}: {e}")
+            exit(1)
+
+  # Open in browser
+  for url in urls:
+    webbrowser.open(url)
+
+  return { "opened": len(urls), "urls": urls }
+
 def payout(ns):
   findings = get_findings(ns)
 
@@ -339,9 +409,8 @@ def set_base(base):
 if ns.command == "payouts":
   set_base(ns.base)
   result = payout(ns)
-# elif ns.command == "open": TODO reintroduce
-#   open(ns)
-#   result = {}
+elif ns.command == "open":
+  result = open_cmd(ns)
 else:
   parser.parse_args(["--help"])
 
