@@ -51,13 +51,99 @@ def get_findings(ns):
   last_page = 1
 
   while page <= last_page:
-    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/findings?perPage=100&page={page}"
-    response = requests.get(url, headers=headers).json()
-    findings.extend(response['data'])
-    last_page = response['pagination']['lastPage']
+    # API change: findings moved behind submissions list; fetch submissions and rebuild finding aggregates
+    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/submissions?perPage=100&page={page}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code != 200:
+      try:
+        body = resp.json()
+      except Exception:
+        body = resp.text
+      print(f"Error fetching findings (HTTP {resp.status_code}) for page {page}.")
+      print("Response:")
+      print(body)
+      print("Hint: Ensure C4AUTH_LOGIN is valid and the contest is accessible.")
+      exit(1)
+
+    try:
+      response = resp.json()
+    except Exception as e:
+      print(f"Invalid JSON from API: {e}")
+      print(resp.text[:500])
+      exit(1)
+
+    if not isinstance(response, dict) or 'data' not in response:
+      print("Unexpected API response: missing 'data'. Full response below:")
+      try:
+        print(json.dumps(response, indent=2))
+      except Exception:
+        print(response)
+      exit(1)
+
+    # The submissions endpoint returns { data: { submissions: [...] }, pagination: {...} }
+    data = response['data']
+    subs = data['submissions'] if isinstance(data, dict) and 'submissions' in data else response['data']
+
+    findings.extend(subs)
+    last_page = response.get('pagination', {}).get('lastPage', last_page)
     page += 1
 
-  return findings
+  # Transform submissions list into finding-like aggregates used by the rest of the script
+  # Group by finding uid (or by (title, severity) if missing)
+  by_finding = {}
+  for sub in findings:
+    finding_key = None
+    if isinstance(sub, dict) and 'finding' in sub and isinstance(sub['finding'], dict):
+      finding_key = sub['finding'].get('uid') or sub['finding'].get('number')
+      finding_number = sub['finding'].get('number')
+    else:
+      finding_key = (sub.get('title'), sub.get('severity'))
+      finding_number = None
+
+    if finding_key not in by_finding:
+      by_finding[finding_key] = {
+        'uid': sub['finding'].get('uid') if isinstance(sub.get('finding'), dict) else None,
+        'number': finding_number,
+        'evaluations': [],
+        'submissions': { 'data': [] },
+        'duplicates': 0,
+      }
+
+    # Aggregate evaluations at finding level: collect all evaluation records with type in {validity,severity}
+    for ev in (sub.get('evaluations') or []):
+      if ev.get('type') in ['validity', 'severity']:
+        by_finding[finding_key]['evaluations'].append(ev)
+
+    # Add to submissions data with required shape
+    sub_entry = {
+      'number': sub.get('number'),
+      'user': sub.get('user'),
+      'team': sub.get('team'),
+      'severity': sub.get('severity'),
+      'evaluations': sub.get('evaluations') or [],
+    }
+    by_finding[finding_key]['submissions']['data'].append(sub_entry)
+
+  # Compute duplicates (unique/partial count) as count of non-zero credit submissions; fallback to total submissions
+  findings_list = []
+  for f in by_finding.values():
+    dups = 0
+    for sub in f['submissions']['data']:
+      credit = 1.0
+      for ev in sub['evaluations']:
+        if ev.get('type') == 'credit':
+          try:
+            credit = int(ev['value'][:-1]) / 100
+          except Exception:
+            credit = 1.0
+      if credit > 0:
+        dups += credit
+    if dups == 0:
+      dups = len(f['submissions']['data'])
+    f['dups'] = dups
+    findings_list.append(f)
+
+  return findings_list
 
 def pp_usd(n):
   return '${:0,.2f}'.format(round(n, 2))
