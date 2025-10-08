@@ -5,8 +5,9 @@ import json
 import argparse
 import datetime
 import os.path
-import webbrowser
 import requests
+import webbrowser
+import concurrent.futures
 
 c4auth_login = os.getenv("C4AUTH_LOGIN")
 if not c4auth_login:
@@ -16,9 +17,6 @@ if not c4auth_login:
   print("- reading it via a cookie editor i.e. the 'Edit this cookie' Chrome extension")
   print("- and copying it to the C4AUTH_LOGIN environment variable")
   exit(1)
-
-handles = {}
-disputed_reports = set()
 
 BASE = 0.85 # Base for Sybil protection. Was once 0.9 but 0.85 since Jul 2024
 
@@ -45,30 +43,112 @@ def get_findings(ns):
     "cookie": f"C4AUTH-LOGIN={os.getenv('C4AUTH_LOGIN')}"
   }
 
-  findings = []
+  all_submissions = []
 
-  page = 1
-  last_page = 1
+  def fetch_page(session, page):
+    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/submissions?perPage=100&page={page}"
+    resp = session.get(url, headers=headers)
+    if resp.status_code != 200:
+      try:
+        body = resp.json()
+      except Exception:
+        body = resp.text
+      raise RuntimeError(f"HTTP {resp.status_code} page {page}: {body}")
+    try:
+      response = resp.json()
+    except Exception as e:
+      raise RuntimeError(f"Invalid JSON on page {page}: {e} :: {resp.text[:500]}")
+    if not isinstance(response, dict) or 'data' not in response:
+      raise RuntimeError(f"Unexpected API response on page {page}: {response}")
+    subs = response.get('data', {}).get('submissions', response.get('data'))
+    if not isinstance(subs, list):
+      subs = []
+    pagination = response.get('pagination', {})
+    return subs, pagination
 
-  while page <= last_page:
-    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/findings?perPage=100&page={page}"
-    response = requests.get(url, headers=headers).json()
-    findings.extend(response['data'])
-    last_page = response['pagination']['lastPage']
-    page += 1
+  with requests.Session() as session:
+    # First page (to get lastPage)
+    try:
+      subs, pagination = fetch_page(session, 1)
+    except Exception as e:
+      print(f"Error fetching findings: {e}")
+      print("Hint: Ensure C4AUTH_LOGIN is valid and the contest is accessible.")
+      exit(1)
+    all_submissions.extend(subs)
+    last_page = pagination.get('lastPage', 1) or 1
 
-  return findings
+    # Remaining pages concurrently
+    if last_page > 1:
+      pages = list(range(2, last_page + 1))
+      with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(pages))) as ex:
+        futures = {ex.submit(fetch_page, session, p): p for p in pages}
+        for fut in concurrent.futures.as_completed(futures):
+          p = futures[fut]
+          try:
+            subs, _ = fut.result()
+            all_submissions.extend(subs)
+          except Exception as e:
+            print(f"Error fetching page {p}: {e}")
+            exit(1)
+
+  # Transform submissions list into finding-like aggregates used by the rest of the script
+  by_finding = {}
+  for sub in all_submissions:
+    if isinstance(sub, dict) and 'finding' in sub and isinstance(sub['finding'], dict):
+      finding_key = sub['finding'].get('uid') or sub['finding'].get('number')
+      finding_number = sub['finding'].get('number')
+      finding_uid = sub['finding'].get('uid')
+    else:
+      finding_key = (sub.get('title'), sub.get('severity'))
+      finding_number = None
+      finding_uid = None
+
+    if finding_key not in by_finding:
+      by_finding[finding_key] = {
+        'uid': finding_uid,
+        'number': finding_number,
+        'evaluations': [],
+        'submissions': { 'data': [] },
+        'duplicates': 0,
+      }
+
+    for ev in (sub.get('evaluations') or []):
+      if ev.get('type') in ['validity', 'severity']:
+        by_finding[finding_key]['evaluations'].append(ev)
+
+    by_finding[finding_key]['submissions']['data'].append({
+      'number': sub.get('number'),
+      'user': sub.get('user'),
+      'team': sub.get('team'),
+      'severity': sub.get('severity'),
+      'evaluations': sub.get('evaluations') or [],
+      'isPrimary': sub.get('isPrimary', False),
+    })
+
+  findings_list = []
+  for f in by_finding.values():
+    # Ensure primary submission, when present, is first to preserve business logic
+    f['submissions']['data'].sort(key=lambda s: (not s.get('isPrimary', False), s.get('number') or 0))
+    dups = 0
+    for sub in f['submissions']['data']:
+      credit = 1.0
+      for ev in sub['evaluations']:
+        if ev.get('type') == 'credit':
+          try:
+            credit = int(ev['value'][:-1]) / 100
+          except Exception:
+            credit = 1.0
+      if credit > 0:
+        dups += credit
+    if dups == 0:
+      dups = len(f['submissions']['data'])
+    f['dups'] = dups
+    findings_list.append(f)
+
+  return findings_list
 
 def pp_usd(n):
   return '${:0,.2f}'.format(round(n, 2))
-
-def pp_month(epoch_time):
-  dt = datetime.datetime.fromtimestamp(epoch_time)
-  return dt.strftime("%B %Y")
-
-def pp_time(epoch_time):
-  dt = datetime.datetime.fromtimestamp(epoch_time)
-  return dt.isoformat()
 
 def is_high(finding_or_submission):
   return finding_or_submission["severity"].lower() == "high"
@@ -100,6 +180,75 @@ def get_validity_and_severity(finding):
 
   return (validity, severity)
 
+def open_cmd(ns):
+  headers = {
+    "content-type": "application/json",
+    "cookie": f"C4AUTH-LOGIN={os.getenv('C4AUTH_LOGIN')}"
+  }
+
+  handle = ns.handle
+  urls = []
+
+  def fetch_page(session, page):
+    url = f"https://code4rena.com/api/v1/audits/{ns.contest_slug}/submissions?perPage=100&page={page}"
+    resp = session.get(url, headers=headers)
+    if resp.status_code != 200:
+      try:
+        body = resp.json()
+      except Exception:
+        body = resp.text
+      raise RuntimeError(f"HTTP {resp.status_code} page {page}: {body}")
+    data = resp.json()
+    subs = data.get('data', {}).get('submissions', data.get('data', []))
+    if not isinstance(subs, list):
+      subs = []
+    pagination = data.get('pagination', {})
+    return subs, pagination
+
+  def matches_handle(sub):
+    u = sub.get('user') or {}
+    if u.get('handle') == handle:
+      return True
+    team = sub.get('team') or {}
+    if team.get('handle') == handle:
+      return True
+    members = team.get('members') or []
+    for m in members:
+      if m.get('handle') == handle:
+        return True
+    return False
+
+  with requests.Session() as session:
+    try:
+      subs, pagination = fetch_page(session, 1)
+    except Exception as e:
+      print(f"Error fetching submissions: {e}")
+      exit(1)
+    for s in subs:
+      if matches_handle(s):
+        urls.append(f"https://code4rena.com/contests/{ns.contest_slug}/submissions/{s.get('number')}")
+    last_page = pagination.get('lastPage', 1) or 1
+    if last_page > 1:
+      pages = list(range(2, last_page + 1))
+      with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(pages))) as ex:
+        futures = {ex.submit(fetch_page, session, p): p for p in pages}
+        for fut in concurrent.futures.as_completed(futures):
+          p = futures[fut]
+          try:
+            subs, _ = fut.result()
+            for s in subs:
+              if matches_handle(s):
+                urls.append(f"https://code4rena.com/contests/{ns.contest_slug}/submissions/{s.get('number')}")
+          except Exception as e:
+            print(f"Error fetching page {p}: {e}")
+            exit(1)
+
+  # Open in browser
+  for url in urls:
+    webbrowser.open(url)
+
+  return { "opened": len(urls), "urls": urls }
+
 def payout(ns):
   findings = get_findings(ns)
 
@@ -129,7 +278,6 @@ def payout(ns):
     finding["dups"] = num_dups
     total_shares += finding["shares"] * (num_dups + 0.3)
 
-
   # Summarise results for each handle
   for finding in findings:
     if "shares" not in finding:
@@ -139,12 +287,12 @@ def payout(ns):
       credit = get_credit(submission)
       if credit == 0:
         continue
-    
+
       if idx == 0:
         submission["sliceCredit"] = 1.3
       else:
         submission["sliceCredit"] = credit
-      
+
       submission["shares"] = finding["shares"] * submission["sliceCredit"]
 
       w = submission["user"]["handle"]
@@ -159,6 +307,7 @@ def payout(ns):
       rec = { 
         "submissionId" : "S-" + str(submission["number"]),
         "findingId": "F-" + str(finding["number"]),
+        "leadFindingId": "F-" + str(finding["number"]),
         "isLeadSubmission": idx == 0,
         "severity": finding["severity"],
         "dups": finding["dups"],
@@ -173,7 +322,16 @@ def payout(ns):
 
   for w in ws:
     ws[w]["findingsCount"] = len(ws[w]["findings"])
-    ws[w]["findings"].sort(key=lambda r: -r["shares"])
+    ws[w]["findings"].sort(key=lambda r: -r["shares"]) 
+
+  # Build duplicate sets per finding to compute effective duplicate counts (sum of sliceCredits)
+  dup_sets = {}
+  for w in ws:
+    for rec in ws[w]["findings"]:
+      fid = rec.get("leadFindingId") or rec.get("findingId")
+      if fid not in dup_sets:
+        dup_sets[fid] = { "findings": [] }
+      dup_sets[fid]["findings"].append(rec)
 
   # Calculate bonuses
   gatherers, highest_gatherer_score = ([], 0)
@@ -187,13 +345,16 @@ def payout(ns):
     for f in ws[w]["findings"]:
       severity_score = 10 if is_high(f) else 3
       total_severity_findings = num_highs if is_high(f) else num_mediums
-      # Partial dupes do not count towards the TH/TG scoring
-      # (see https://discord.com/channels/810916927919620096/976603323450941440/1302960578091946074
-      # or https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
+      # Only full-credit findings count towards TH/TG scoring, but partial credits affect duplicate count
+      # (see https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)
       if f["sliceCredit"] >= 1:
         gatherer_score += severity_score / total_severity_findings
-        if f["dups"] <= 5:
-          hunter_score += severity_score / f["dups"]
+        # Calculate effective number of duplicates including partial credits, remove lead bonus (0.3)
+        fid = f.get("leadFindingId") or f.get("findingId")
+        group = dup_sets.get(fid, {"findings": []})["findings"]
+        effective_dups = sum(d.get("sliceCredit", 0) for d in group) - 0.3
+        if effective_dups < 5:
+          hunter_score += severity_score / max(effective_dups, 1)
 
     ws[w]["gathererScore"] = gatherer_score
     if gatherer_score > highest_gatherer_score:
@@ -248,9 +409,8 @@ def set_base(base):
 if ns.command == "payouts":
   set_base(ns.base)
   result = payout(ns)
-# elif ns.command == "open": TODO reintroduce
-#   open(ns)
-#   result = {}
+elif ns.command == "open":
+  result = open_cmd(ns)
 else:
   parser.parse_args(["--help"])
 
