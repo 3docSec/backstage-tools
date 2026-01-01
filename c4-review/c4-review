@@ -29,7 +29,6 @@ base_help = f"Change base (default {BASE}) for Sybil protection e.g. --base=0.9 
 payout = subp.add_parser("payouts", description="Find out the fraction of total pot or payouts")
 payout.add_argument('contest_slug', type=str)
 payout.add_argument('pot_size', type=int, nargs='?')
-payout.add_argument('-d', '--ignore_disputed', type=bool)
 payout.add_argument('-w', '--handle', type=str, nargs='?')
 payout.add_argument('-b', '--base', type=str, nargs=1, help=base_help)
 
