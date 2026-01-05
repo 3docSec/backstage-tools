@@ -11,14 +11,14 @@ With `c4-review` you can:
 - see a summary of the findings with duplicate counts and a list of handles that found each issue
 - estimate your contest payout given the current status of the GitHub finding repo.
 
-Just find out the findings repo name of the contest you look for and try out one of the commands below.
+Just find the contest/audit slug (e.g. `2025-09-monad`) and try out one of the commands below.
 
 For even prettier output just pipe the command into the `jq` tool.
 
 e.g.
 
 ```
-$ ./c4-review payouts 2023-08-goodentry-findings 46000 | jq
+$ ./c4-review payouts 2025-09-monad 480000 | jq
 ```
 
 ----
@@ -43,12 +43,12 @@ $ ./c4-review --help
 ```
 
 ```
-usage: c4-review [-h] {payouts} ...
+usage: c4-review [-h] {payouts,open} ...
 
 Analyzes the C4 findings data and provides stats. Estimates payout if you provide a handle
 
 positional arguments:
-  {payouts}
+  {payouts,open}
 
 options:
   -h, --help          show this help message and exit
@@ -79,6 +79,15 @@ options:
 ```
 $ ./c4-review open --help
 ```
-usage: c4-review open [-h] findings_repo handle
+```
+usage: c4-review open [-h] contest_slug handle
 
-Opens in a browser tab all findings reported by a given warden
+Opens all findings from a given warden in browser
+
+positional arguments:
+  contest_slug
+  handle
+
+options:
+  -h, --help    show this help message and exit
+```
